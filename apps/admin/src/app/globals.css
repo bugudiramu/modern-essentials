@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #FEFFFF;
+    --foreground: #17252A;
+    --card: #FEFFFF;
+    --card-foreground: #17252A;
+    --popover: #FEFFFF;
+    --popover-foreground: #17252A;
+    --primary: #2B7A78;
+    --primary-foreground: #FEFFFF;
+    --secondary: #3AAFA9;
+    --secondary-foreground: #FEFFFF;
+    --muted: #DEF2F1;
+    --muted-foreground: #17252A;
+    --accent: #DEF2F1;
+    --accent-foreground: #17252A;
+    --destructive: #ba1a1a;
+    --destructive-foreground: #FEFFFF;
+    --border: #DEF2F1;
+    --input: #DEF2F1;
+    --ring: #3AAFA9;
+    --radius: 1rem;
+  }
+
+  .dark {
+    /* Minimal Dark Mode Support - Vibrant & Fresh Theme */
+    --background: #112a28;
+    --foreground: #dbe9ee;
+    --card: #183d3a;
+    --card-foreground: #dbe9ee;
+    --popover: #183d3a;
+    --popover-foreground: #dbe9ee;
+    --primary: #3AAFA9;
+    --primary-foreground: #112a28;
+    --secondary: #dbe9ee;
+    --secondary-foreground: #112a28;
+    --muted: #183d3a;
+    --muted-foreground: #7ba8a4;
+    --accent: #183d3a;
+    --accent-foreground: #dbe9ee;
+    --destructive: #ffdad6;
+    --destructive-foreground: #93000a;
+    --border: #244f4c;
+    --input: #244f4c;
+    --ring: #3AAFA9;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Print styles for pick list and dispatch manifest */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-full-width {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  th, td {
+    border: 1px solid #333;
+    padding: 4px 8px;
+    text-align: left;
+  }
+}
