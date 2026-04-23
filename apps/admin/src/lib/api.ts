@@ -1,4 +1,8 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:4000";
+// In production, we use the Next.js rewrite /api proxy in the browser
+const API_BASE_URL =
+  typeof window !== "undefined"
+    ? "/api"
+    : process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:4000";
 
 /**
  * API client for the admin dashboard.
@@ -22,7 +26,9 @@ export async function apiFetch<T>(
   } as RequestInit);
 
   if (!res.ok) {
-    const errorBody = await res.json().catch(() => ({ message: res.statusText })) as { message?: string };
+    const errorBody = (await res
+      .json()
+      .catch(() => ({ message: res.statusText }))) as { message?: string };
     throw new Error(errorBody.message || `API error: ${res.status}`);
   }
 
@@ -39,7 +45,10 @@ export function apiGet<T>(path: string): Promise<T> {
 /**
  * POST request helper.
  */
-export function apiPost<T>(path: string, body: Record<string, unknown>): Promise<T> {
+export function apiPost<T>(
+  path: string,
+  body: Record<string, unknown>,
+): Promise<T> {
   return apiFetch<T>(path, {
     method: "POST",
     body: JSON.stringify(body),
@@ -49,7 +58,10 @@ export function apiPost<T>(path: string, body: Record<string, unknown>): Promise
 /**
  * PATCH request helper.
  */
-export function apiPatch<T>(path: string, body: Record<string, unknown>): Promise<T> {
+export function apiPatch<T>(
+  path: string,
+  body: Record<string, unknown>,
+): Promise<T> {
   return apiFetch<T>(path, {
     method: "PATCH",
     body: JSON.stringify(body),

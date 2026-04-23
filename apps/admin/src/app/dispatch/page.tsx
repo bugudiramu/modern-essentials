@@ -32,7 +32,11 @@ interface ManifestResponse {
   manifests: ManifestArea[];
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:4000";
+// In production, we use the Next.js rewrite /api proxy in the browser
+const API_URL =
+  typeof window !== "undefined"
+    ? "/api"
+    : process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:4000";
 
 function handlePrint() {
   window.print();
@@ -115,7 +119,8 @@ export default function DispatchPage() {
               Shipment Manifest
             </h3>
             <p className="text-sm text-muted-foreground mt-2 font-medium">
-              {data?.orderCount || 0} packed orders across {data?.areaCount || 0} areas
+              {data?.orderCount || 0} packed orders across{" "}
+              {data?.areaCount || 0} areas
               {data?.generatedAt &&
                 ` · Generated ${new Date(data.generatedAt).toLocaleTimeString("en-IN")}`}
             </p>
@@ -128,9 +133,7 @@ export default function DispatchPage() {
                 className="flex items-center gap-2 rounded-xl bg-secondary px-6 py-3 text-[10px] font-black uppercase tracking-widest text-white hover:opacity-90 transition-all disabled:opacity-50 shadow-sm"
               >
                 <Truck className="h-4 w-4" />
-                {dispatchLoading === "bulk"
-                  ? "Dispatching..."
-                  : "Dispatch All"}
+                {dispatchLoading === "bulk" ? "Dispatching..." : "Dispatch All"}
               </button>
             )}
             <button
@@ -161,10 +164,16 @@ export default function DispatchPage() {
         ) : (
           <div className="space-y-16">
             {data.manifests.map((area) => (
-              <div key={area.postalCode} className="space-y-8 break-inside-avoid">
+              <div
+                key={area.postalCode}
+                className="space-y-8 break-inside-avoid"
+              >
                 <div className="flex items-center gap-6">
                   <h4 className="font-headline text-2xl font-bold text-primary italic whitespace-nowrap">
-                    Area: {area.postalCode} <span className="text-sm font-sans font-medium text-muted-foreground not-italic ml-3">({area.orders.length} orders)</span>
+                    Area: {area.postalCode}{" "}
+                    <span className="text-sm font-sans font-medium text-muted-foreground not-italic ml-3">
+                      ({area.orders.length} orders)
+                    </span>
                   </h4>
                   <div className="h-px flex-1 bg-surface-container-high"></div>
                 </div>
@@ -219,7 +228,9 @@ export default function DispatchPage() {
                             )}
                           </td>
                           <td className="px-6 py-6 text-sm font-medium text-muted-foreground max-w-xs">
-                            {order.items.map((i) => `${i.productName} ×${i.qty}`).join(", ")}
+                            {order.items
+                              .map((i) => `${i.productName} ×${i.qty}`)
+                              .join(", ")}
                           </td>
                           <td className="px-6 py-6 text-sm font-black text-foreground">
                             {formatPrice(order.total)}
