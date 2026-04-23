@@ -19,7 +19,7 @@ export class TestSeedService {
         images: {
           create: [
             {
-              url: "https://images.unsplash.com/photo-1519077294537-9bc099d3ae6c?q=80&w=993&auto=format&fit=crop",
+              url: "https://images.unsplash.com/photo-1617611647086-bccca8c2cf84?q=80&w=2070&auto=format&fit=crop",
               alt: "Fresh brown eggs in a basket",
               sortOrder: 0,
             },
@@ -70,8 +70,8 @@ export class TestSeedService {
               {
                 sku: "EGG002",
                 packSize: 6,
-                price: 15000, // ₹150.00
-                subPrice: 13500, // ₹135.00
+                price: 1000, // 10.00
+                subPrice: 1500, // 15.00
               },
             ],
           },
