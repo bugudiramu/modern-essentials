@@ -3,11 +3,14 @@ import { Suspense } from "react";
 import { Heading, Badge, Skeleton } from "@modern-essentials/ui";
 export const runtime = "edge";
 
-
 export const dynamic = "force-dynamic";
 
 async function getProducts(category?: string) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  // In production, we use the Next.js rewrite /api proxy
+  const apiUrl =
+    typeof window !== "undefined"
+      ? "/api"
+      : process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
   const url = new URL(`${apiUrl}/products`);
   if (category) {
     url.searchParams.set("category", category);
@@ -37,11 +40,17 @@ export default async function ProductsPage({
     <div className="min-h-screen bg-surface py-12 md:py-24">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <header className="mb-20 text-center space-y-6">
-          <Heading variant="h1" className="text-5xl md:text-7xl text-primary tracking-tighter">
+          <Heading
+            variant="h1"
+            className="text-5xl md:text-7xl text-primary tracking-tighter"
+          >
             Our Fresh Essentials
           </Heading>
           {searchParams.category && (
-            <Badge variant="secondary" className="px-6 py-2 rounded-full uppercase tracking-[0.2em] text-xs font-black border-none shadow-sm bg-secondary text-white">
+            <Badge
+              variant="secondary"
+              className="px-6 py-2 rounded-full uppercase tracking-[0.2em] text-xs font-black border-none shadow-sm bg-secondary text-white"
+            >
               {searchParams.category.replace("_", " ")}
             </Badge>
           )}

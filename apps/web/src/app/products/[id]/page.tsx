@@ -16,7 +16,11 @@ export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 async function getProduct(id: string) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  // In production, we use the Next.js rewrite /api proxy
+  const apiUrl =
+    typeof window !== "undefined"
+      ? "/api"
+      : process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
   try {
     const res = await fetch(`${apiUrl}/products/${id}`, {
       next: { revalidate: 0 },
