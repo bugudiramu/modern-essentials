@@ -60,6 +60,16 @@ export class CatalogController {
     return { message: "Sample products created successfully" };
   }
 
+  @Delete("test/reset")
+  @ApiOperation({ summary: "Wipe all test product data from the database" })
+  @ApiResponse({
+    status: 200,
+    description: "Test data wiped successfully",
+  })
+  async resetTestData() {
+    return this.testSeedService.resetTestData();
+  }
+
   @Get("categories")
   @ApiOperation({ summary: "Get all product categories" })
   @ApiResponse({

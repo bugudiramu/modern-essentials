@@ -119,4 +119,28 @@ export class TestSeedService {
 
     return products;
   }
+
+  async resetTestData() {
+    // Must delete in FK-safe order.
+    // farm_batches has FK → inventory_batches (RESTRICT), so farmBatch goes first.
+    await this.prisma.farmBatch.deleteMany({});
+    await this.prisma.inventoryBatch.deleteMany({});
+    await this.prisma.wastageLog.deleteMany({});
+
+    // These cascade but we delete explicitly for safety
+    await this.prisma.cartItem.deleteMany({});
+    await this.prisma.subscriptionItem.deleteMany({});
+    await this.prisma.subscriptionPlan.deleteMany({});
+    await this.prisma.orderItem.deleteMany({});
+
+    // Now safe to delete variants and products
+    await this.prisma.productVariant.deleteMany({});
+    await this.prisma.productImage.deleteMany({});
+    await this.prisma.productPartnerLink.deleteMany({});
+    await this.prisma.product.deleteMany({});
+
+    return {
+      message: "All test product data wiped successfully",
+    };
+  }
 }
