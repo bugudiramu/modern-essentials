@@ -16,7 +16,10 @@ import { PrismaModule } from "./common/prisma.module";
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ".env",
+      envFilePath:
+        process.env.NODE_ENV === "production"
+          ? ".env.production"
+          : ".env.local",
     }),
     PrismaModule,
     CatalogModule,

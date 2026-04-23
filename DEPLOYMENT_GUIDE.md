@@ -56,29 +56,40 @@ This document outlines the step-by-step configuration for the Modern Essentials 
 
 ---
 
-## 2. Environment Variables Matrix
+## 2. Environment Variable Management Strategy
 
-### Backend (Railway)
+To ensure a clean and secure setup, we use the following file-based strategy:
 
-| Variable              | Source     | Note                               |
-| :-------------------- | :--------- | :--------------------------------- |
-| `DATABASE_URL`        | Supabase   | Transaction Pooler (Port 6543)     |
-| `DIRECT_URL`          | Supabase   | Direct Connection (Port 5432)      |
-| `REDIS_URL`           | Upstash    | Used for BullMQ                    |
-| `CLERK_SECRET_KEY`    | Clerk      | Found in API Keys                  |
-| `RAZORPAY_KEY_ID`     | Razorpay   | **Using Test Key**                 |
-| `RAZORPAY_KEY_SECRET` | Razorpay   | **Using Test Secret**              |
-| `NODE_ENV`            | Static     | `production`                       |
-| `FRONTEND_URL`        | Cloudflare | Your `.pages.dev` or custom domain |
+### 🏠 Local Development (`.env.local`)
 
-### Frontends (Cloudflare Pages)
+- **Purpose:** Contains all secrets and configuration needed for your local machine.
+- **Git Status:** **IGNORED** (Never committed to the repo).
+- **Setup:** Copy `.env.example` to `.env.local` and fill in your test credentials.
 
-| Variable                            | Source   | Note                                  |
-| :---------------------------------- | :------- | :------------------------------------ |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk    |                                       |
-| `CLERK_SECRET_KEY`                  | Clerk    | Required for Middleware               |
-| `NEXT_PUBLIC_API_URL`               | Railway  | Your API URL (e.g., `https://api...`) |
-| `NEXT_PUBLIC_RAZORPAY_KEY_ID`       | Razorpay | **Using Test Key**                    |
+### 🚀 Production Environment (`.env.production`)
+
+- **Purpose:** Contains **non-secret** production defaults (e.g., Public API URLs, Redirect paths).
+- **Git Status:** **COMMITTED** (Optional, for environment-specific defaults).
+- **Note:** **SECRETS** (API Keys, DB Passwords) should **still be added to the Railway/Cloudflare UI** for maximum security. However, this file ensures that the build process always knows which URLs to use for production.
+
+### 📋 Environment Variables Matrix
+
+#### Backend (Railway)
+
+| Variable           | Value in `.env.local` | Value in Platform UI |
+| :----------------- | :-------------------- | :------------------- |
+| `DATABASE_URL`     | Local Postgres        | Supabase Pooler      |
+| `DIRECT_URL`       | Local Postgres        | Supabase Direct      |
+| `REDIS_URL`        | `redis://localhost`   | Upstash URL          |
+| `CLERK_SECRET_KEY` | `sk_test_...`         | `sk_live_...`        |
+| `RAZORPAY_KEY_ID`  | `rzp_test_...`        | `rzp_live_...`       |
+
+#### Frontends (Cloudflare Pages)
+
+| Variable                            | Value in `.env.local`   | Value in Platform UI         |
+| :---------------------------------- | :---------------------- | :--------------------------- |
+| `NEXT_PUBLIC_API_URL`               | `http://localhost:4000` | `https://api.yourdomain.com` |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_test_...`           | `pk_live_...`                |
 
 ---
 
