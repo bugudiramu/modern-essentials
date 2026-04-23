@@ -1,7 +1,6 @@
 "use client";
 
-
-import { useUser, useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import {
   createContext,
   ReactNode,
@@ -42,7 +41,13 @@ interface CartState {
 }
 
 interface CartContextType extends CartState {
-  addItem: (variant: any, quantity: number, isSubscription?: boolean, frequency?: string, product?: any) => Promise<void>;
+  addItem: (
+    variant: any,
+    quantity: number,
+    isSubscription?: boolean,
+    frequency?: string,
+    product?: any,
+  ) => Promise<void>;
   updateItem: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -99,13 +104,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const { isSignedIn, user } = useUser();
   const { getToken } = useAuth();
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  // In production, we use the Next.js rewrite /api proxy
+  const apiUrl =
+    typeof window !== "undefined"
+      ? "/api"
+      : process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
   // Helper to persist to local storage as fallback
-  const persistToLocalStorage = (data: { items: CartItem[]; totalItems: number; totalAmount: number }) => {
+  const persistToLocalStorage = (data: {
+    items: CartItem[];
+    totalItems: number;
+    totalAmount: number;
+  }) => {
     try {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem("modern_essentials_cart", JSON.stringify(data));
+        window.localStorage.setItem(
+          "modern_essentials_cart",
+          JSON.stringify(data),
+        );
       }
     } catch (e) {
       console.warn("Could not save to localStorage");
@@ -114,7 +130,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const fetchCart = async () => {
     dispatch({ type: "SET_LOADING", payload: true });
-    
+
     // If logged in, fetch from API
     if (isSignedIn && user) {
       try {
@@ -124,7 +140,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             Authorization: `Bearer ${token}`,
           },
         });
-        
+
         if (res.ok) {
           const cartData = await res.json();
           dispatch({ type: "SET_CART", payload: cartData });
@@ -156,9 +172,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const addItem = async (variant: any, quantity: number, isSubscription = false, frequency = "WEEKLY", product?: any) => {
+  const addItem = async (
+    variant: any,
+    quantity: number,
+    isSubscription = false,
+    frequency = "WEEKLY",
+    product?: any,
+  ) => {
     dispatch({ type: "SET_LOADING", payload: true });
-    
+
     if (isSignedIn && user) {
       try {
         const token = (await getToken()) || user?.id || "test-user-123";
@@ -191,7 +213,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     // Guest mode or API failure
     const currentItems = [...state.items];
     const existingIndex = currentItems.findIndex(
-      i => i.variantId === variant.id && i.isSubscription === isSubscription
+      (i) => i.variantId === variant.id && i.isSubscription === isSubscription,
     );
 
     // Get product info from passed product or variant.product
@@ -199,9 +221,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     if (existingIndex >= 0) {
       currentItems[existingIndex].quantity += quantity;
-      
+
       // Also ensure variant/product info is present if it was previously missing
-      if (!currentItems[existingIndex].variant || !currentItems[existingIndex].variant.product) {
+      if (
+        !currentItems[existingIndex].variant ||
+        !currentItems[existingIndex].variant.product
+      ) {
         currentItems[existingIndex].variant = {
           id: variant.id,
           sku: variant.sku,
@@ -211,8 +236,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           product: {
             id: productInfo?.id || variant.productId,
             name: productInfo?.name || "Product",
-            images: productInfo?.images || []
-          }
+            images: productInfo?.images || [],
+          },
         };
       }
     } else {
@@ -234,16 +259,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
           product: {
             id: productInfo?.id || variant.productId,
             name: productInfo?.name || "Product",
-            images: productInfo?.images || []
-          }
-        }
+            images: productInfo?.images || [],
+          },
+        },
       });
     }
 
-    const totalItems = currentItems.reduce((acc, item) => acc + item.quantity, 0);
-    const totalAmount = currentItems.reduce((acc, item) => acc + (item.quantity * item.priceSnapshot), 0);
+    const totalItems = currentItems.reduce(
+      (acc, item) => acc + item.quantity,
+      0,
+    );
+    const totalAmount = currentItems.reduce(
+      (acc, item) => acc + item.quantity * item.priceSnapshot,
+      0,
+    );
     const cartData = { items: currentItems, totalItems, totalAmount };
-    
+
     dispatch({ type: "SET_CART", payload: cartData });
     persistToLocalStorage(cartData);
     dispatch({ type: "OPEN_CART" });
@@ -275,14 +306,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     const currentItems = [...state.items];
-    const index = currentItems.findIndex(i => i.id === itemId);
+    const index = currentItems.findIndex((i) => i.id === itemId);
     if (index >= 0) {
-       currentItems[index].quantity = Math.max(1, quantity);
-       const totalItems = currentItems.reduce((acc, item) => acc + item.quantity, 0);
-       const totalAmount = currentItems.reduce((acc, item) => acc + (item.quantity * item.priceSnapshot), 0);
-       const cartData = { items: currentItems, totalItems, totalAmount };
-       dispatch({ type: "SET_CART", payload: cartData });
-       persistToLocalStorage(cartData);
+      currentItems[index].quantity = Math.max(1, quantity);
+      const totalItems = currentItems.reduce(
+        (acc, item) => acc + item.quantity,
+        0,
+      );
+      const totalAmount = currentItems.reduce(
+        (acc, item) => acc + item.quantity * item.priceSnapshot,
+        0,
+      );
+      const cartData = { items: currentItems, totalItems, totalAmount };
+      dispatch({ type: "SET_CART", payload: cartData });
+      persistToLocalStorage(cartData);
     }
   };
 
@@ -308,9 +345,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const currentItems = state.items.filter(i => i.id !== itemId);
-    const totalItems = currentItems.reduce((acc, item) => acc + item.quantity, 0);
-    const totalAmount = currentItems.reduce((acc, item) => acc + (item.quantity * item.priceSnapshot), 0);
+    const currentItems = state.items.filter((i) => i.id !== itemId);
+    const totalItems = currentItems.reduce(
+      (acc, item) => acc + item.quantity,
+      0,
+    );
+    const totalAmount = currentItems.reduce(
+      (acc, item) => acc + item.quantity * item.priceSnapshot,
+      0,
+    );
     const cartData = { items: currentItems, totalItems, totalAmount };
     dispatch({ type: "SET_CART", payload: cartData });
     persistToLocalStorage(cartData);
