@@ -18,12 +18,10 @@ export default function GlobalError({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 bg-surface">
-      <h2 className="text-4xl font-headline text-on-surface mb-4">
-        Something went wrong!
-      </h2>
+      <h2 className="text-4xl font-headline text-on-surface mb-4">Something went wrong!</h2>
       <p className="max-w-md mb-8 text-on-surface-variant font-body text-lg">
-        An unexpected error occurred in our system. We've been notified and are
-        looking into it.
+        An unexpected error occurred in our system. 
+        We've been notified and are looking into it.
       </p>
       <Button
         onClick={() => reset()}

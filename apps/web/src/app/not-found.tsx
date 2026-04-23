@@ -13,19 +13,13 @@ export default function NotFound() {
             <ShoppingBag className="w-10 h-10 text-primary/20" />
           </div>
           <div className="space-y-4">
-            <Heading variant="h1" className="text-primary tracking-tighter">
-              404 - Not Found
-            </Heading>
+            <Heading variant="h1" className="text-primary tracking-tighter">404 - Not Found</Heading>
             <Text variant="lead" className="text-primary/60 leading-relaxed">
-              The page you are looking for has been curated away or never
-              existed. Let's get you back to the collection.
+              The page you are looking for has been curated away or never existed. 
+              Let's get you back to the collection.
             </Text>
           </div>
-          <Button
-            asChild
-            size="lg"
-            className="px-12 bg-secondary rounded-full h-16 font-bold uppercase tracking-widest shadow-lg"
-          >
+          <Button asChild size="lg" className="px-12 bg-secondary rounded-full h-16 font-bold uppercase tracking-widest shadow-lg">
             <Link href="/">Go back home</Link>
           </Button>
         </div>
