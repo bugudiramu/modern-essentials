@@ -1,27 +1,27 @@
 "use client";
 
-import { useUser, useAuth } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ChevronRight, LayoutDashboard, Package, History } from "lucide-react";
-import { formatPrice, formatDate } from "@/lib/utils";
+import { formatDate, formatPrice } from "@/lib/utils";
+import { useAuth, useUser } from "@clerk/nextjs";
 import {
-  Button,
-  Heading,
-  Text,
   Badge,
+  Button,
   Card,
+  CardContent,
   CardHeader,
   CardTitle,
-  CardContent,
+  Heading,
+  Skeleton,
   Table,
-  TableHeader,
-  TableRow,
-  TableHead,
   TableBody,
   TableCell,
-  Skeleton,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Text,
 } from "@modern-essentials/ui";
+import { ChevronRight, History, LayoutDashboard, Package } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export const runtime = "edge";
 

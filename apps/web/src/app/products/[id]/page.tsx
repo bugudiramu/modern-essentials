@@ -1,6 +1,4 @@
 import { ProductDetailClient } from "@/components/ProductDetailClient";
-import Link from "next/link";
-import { notFound } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,8 +8,11 @@ import {
   BreadcrumbSeparator,
   Text,
 } from "@modern-essentials/ui";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 
 export const runtime = "edge";
+
 export const dynamic = "force-dynamic";
 
 async function getProduct(id: string) {
