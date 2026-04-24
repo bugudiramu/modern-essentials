@@ -32,6 +32,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useCart } from "../../contexts/CartContext";
 import { useForm, ControllerRenderProps } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ApiError } from "@modern-essentials/utils";
 import * as z from "zod";
 import Image from "next/image";
 export const runtime = "edge";
@@ -142,7 +143,8 @@ function CheckoutContent() {
       });
 
       if (!orderResponse.ok) {
-        throw new Error("Order Request Failed");
+        const error = await ApiError.fromResponse(orderResponse);
+        throw error;
       }
 
       const checkoutData = await orderResponse.json();
@@ -216,10 +218,14 @@ function CheckoutContent() {
                 `/order-confirmation?orderId=${verifyData.orderId || "success"}`,
               );
             } else {
-              throw new Error("Could not verify payment securely.");
+              const error = await ApiError.fromResponse(verifyResponse);
+              throw error;
             }
-          } catch (error) {
-            setError("Payment verification failed. Please contact support.");
+          } catch (err: any) {
+            setError(
+              err.friendlyMessage ||
+                "Payment verification failed. Please contact support.",
+            );
           }
         },
       };
@@ -238,8 +244,8 @@ function CheckoutContent() {
       } else {
         setError("Payment bridge unavailable. Try disabling adblock.");
       }
-    } catch (error) {
-      setError("Checkout initialization failed.");
+    } catch (err: any) {
+      setError(err.friendlyMessage || "Checkout initialization failed.");
     } finally {
       setLoading(false);
     }
@@ -542,11 +548,11 @@ function CheckoutContent() {
 
                   <Button
                     type="submit"
-                    disabled={loading}
+                    isLoading={loading}
                     size="lg"
                     className="w-full h-14 bg-secondary hover:brightness-110 text-white rounded-full font-black uppercase tracking-widest text-xs shadow-lg shadow-secondary/20 transition-all"
                   >
-                    {loading ? "Processing..." : "Complete Purchase"}
+                    Complete Purchase
                     {!loading && <ArrowRight className="ml-3 w-4 h-4" />}
                   </Button>
 

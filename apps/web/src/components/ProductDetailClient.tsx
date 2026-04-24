@@ -1,15 +1,15 @@
 "use client";
 
 import { useCart } from "@/contexts/CartContext";
-import { 
-  Button, 
-  FreshnessGauge, 
-  Heading, 
-  Text, 
-  AspectRatio, 
-  Card, 
+import {
+  Button,
+  FreshnessGauge,
+  Heading,
+  Text,
+  AspectRatio,
+  Card,
   Separator,
-  cn
+  cn,
 } from "@modern-essentials/ui";
 import { Leaf, Minus, Plus, Check, ExternalLink } from "lucide-react";
 import { useState, useMemo } from "react";
@@ -21,20 +21,31 @@ interface ProductDetailClientProps {
 }
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
-  const [selectedVariantId, setSelectedVariantId] = useState(product.variants?.[0]?.id);
+  const [selectedVariantId, setSelectedVariantId] = useState(
+    product.variants?.[0]?.id,
+  );
   const [isSubscription, setIsSubscription] = useState(true);
   const [frequency, setFrequency] = useState("WEEKLY");
   const [quantity, setQuantity] = useState(1);
-  const { addItem } = useCart();
+  const { addItem, isLoading } = useCart();
 
-  const selectedVariant = useMemo(() => 
-    product.variants?.find((v: any) => v.id === selectedVariantId) || product.variants?.[0],
-  [product.variants, selectedVariantId]);
+  const selectedVariant = useMemo(
+    () =>
+      product.variants?.find((v: any) => v.id === selectedVariantId) ||
+      product.variants?.[0],
+    [product.variants, selectedVariantId],
+  );
 
   const handleAddToCart = async () => {
     try {
       if (!selectedVariant) return;
-      await addItem(selectedVariant, quantity, isSubscription, frequency, product);
+      await addItem(
+        selectedVariant,
+        quantity,
+        isSubscription,
+        frequency,
+        product,
+      );
     } catch (err) {
       console.error("Failed to add to cart", err);
     }
@@ -43,7 +54,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const handleSubscriptionChange = (
     subscribe: boolean,
     newFrequency: string,
-    _durationMonths: number
+    _durationMonths: number,
   ) => {
     setIsSubscription(subscribe);
     if (newFrequency) setFrequency(newFrequency);
@@ -56,7 +67,11 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         {product.images && product.images.length > 0 ? (
           <div className="space-y-4">
             {product.images.map((image: any) => (
-              <AspectRatio key={image.url} ratio={1.1} className="overflow-hidden rounded-2xl bg-surface-container-low shadow-sm border border-primary/5">
+              <AspectRatio
+                key={image.url}
+                ratio={1.1}
+                className="overflow-hidden rounded-2xl bg-surface-container-low shadow-sm border border-primary/5"
+              >
                 <Image
                   src={image.url}
                   alt={image.alt || product.name}
@@ -68,7 +83,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             ))}
           </div>
         ) : (
-          <AspectRatio ratio={1} className="rounded-2xl bg-surface-container-low flex items-center justify-center border border-dashed border-primary/10">
+          <AspectRatio
+            ratio={1}
+            className="rounded-2xl bg-surface-container-low flex items-center justify-center border border-dashed border-primary/10"
+          >
             <Text variant="muted">No Image Available</Text>
           </AspectRatio>
         )}
@@ -76,7 +94,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         {/* Quick Commerce Links */}
         {product.partnerLinks && product.partnerLinks.length > 0 && (
           <Card className="p-6 rounded-2xl bg-surface-container-low border-none shadow-sm">
-            <Text variant="xs" className="text-primary/40 font-black uppercase tracking-widest mb-4">
+            <Text
+              variant="xs"
+              className="text-primary/40 font-black uppercase tracking-widest mb-4"
+            >
               Also Available On
             </Text>
             <div className="grid grid-cols-2 gap-3">
@@ -88,7 +109,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   rel="noopener noreferrer"
                   className="flex items-center justify-between p-3 rounded-xl bg-surface hover:bg-white transition-all border border-primary/5 group"
                 >
-                  <Text variant="xs" className="font-bold text-primary capitalize">
+                  <Text
+                    variant="xs"
+                    className="font-bold text-primary capitalize"
+                  >
                     {link.partner.toLowerCase()}
                   </Text>
                   <ExternalLink className="w-3 h-3 text-primary/20 group-hover:text-secondary transition-colors" />
@@ -102,12 +126,15 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       {/* Product Info & Action Area - 7 cols */}
       <div className="lg:col-span-7 flex flex-col gap-5 lg:sticky lg:top-24">
         <div className="space-y-3">
-          <FreshnessGauge 
-            icon={<Leaf className="w-3 h-3" />} 
-            label="Farm Fresh Direct" 
+          <FreshnessGauge
+            icon={<Leaf className="w-3 h-3" />}
+            label="Farm Fresh Direct"
           />
-          
-          <Heading variant="h1" className="text-2xl sm:text-3xl text-primary leading-tight font-bold">
+
+          <Heading
+            variant="h1"
+            className="text-2xl sm:text-3xl text-primary leading-tight font-bold"
+          >
             {product.name}
           </Heading>
 
@@ -119,7 +146,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
         {/* Pack Size Selector */}
         <div className="space-y-3">
-          <Text variant="xs" className="text-primary/40 font-black uppercase tracking-widest">
+          <Text
+            variant="xs"
+            className="text-primary/40 font-black uppercase tracking-widest"
+          >
             Select Pack Size
           </Text>
           <div className="flex flex-wrap gap-3">
@@ -131,7 +161,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   "px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all border-2",
                   selectedVariantId === variant.id
                     ? "border-secondary bg-surface shadow-md text-primary"
-                    : "border-primary/5 bg-surface/30 text-primary/40 hover:bg-surface/50"
+                    : "border-primary/5 bg-surface/30 text-primary/40 hover:bg-surface/50",
                 )}
               >
                 {variant.packSize} Eggs
@@ -143,7 +173,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         {/* Pricing / Plan Selection */}
         <Card className="bg-surface-container-low border-none rounded-2xl p-4 md:p-5 shadow-sm ring-1 ring-primary/5">
           <div className="mb-4">
-            <Text variant="xs" className="text-primary/30 font-black uppercase tracking-[0.1em]">
+            <Text
+              variant="xs"
+              className="text-primary/30 font-black uppercase tracking-[0.1em]"
+            >
               Select Your Plan
             </Text>
           </div>
@@ -159,7 +192,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           {/* Action Buttons */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Text variant="xs" className="text-primary/40 font-bold uppercase tracking-widest">
+              <Text
+                variant="xs"
+                className="text-primary/40 font-bold uppercase tracking-widest"
+              >
                 Curated Quantity
               </Text>
               <div className="flex items-center space-x-4 bg-surface rounded-full px-3 py-1.5 shadow-inner border border-primary/5">
@@ -187,6 +223,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
             <Button
               onClick={handleAddToCart}
+              isLoading={isLoading}
               size="lg"
               className="w-full text-xs uppercase tracking-[0.15em] font-black h-12 bg-secondary hover:brightness-110 text-white rounded-full transition-all active:scale-[0.98] shadow-md shadow-secondary/10"
             >
@@ -195,7 +232,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
             <div className="flex items-center justify-center gap-2">
               <Check className="w-3 h-3 text-secondary" />
-              <Text variant="xs" className="text-primary/30 font-bold uppercase tracking-widest text-[8px]">
+              <Text
+                variant="xs"
+                className="text-primary/30 font-bold uppercase tracking-widest text-[8px]"
+              >
                 Flexible schedule. Cancel anytime.
               </Text>
             </div>

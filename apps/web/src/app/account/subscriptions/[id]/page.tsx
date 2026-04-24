@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { ApiError } from "@modern-essentials/utils";
 import { PauseDialog } from "@/components/subscriptions/PauseDialog";
 import { SkipDialog } from "@/components/subscriptions/SkipDialog";
 import { CancelFlow } from "@/components/subscriptions/CancelFlow";
@@ -84,6 +86,7 @@ export default function SubscriptionDetailPage() {
   };
 
   const handleAction = async (action: string, body?: any) => {
+    setLoading(true);
     try {
       const token = (await getToken()) || user?.id || "test-user-123";
       const response = await fetch(`${apiUrl}/subscriptions/${id}/${action}`, {
@@ -95,14 +98,22 @@ export default function SubscriptionDetailPage() {
         body: body ? JSON.stringify(body) : undefined,
       });
 
-      if (!response.ok) throw new Error(`Failed to ${action} subscription`);
+      if (!response.ok) {
+        const error = await ApiError.fromResponse(response);
+        throw error;
+      }
 
       const updated = await response.json();
       setSubscription(updated);
       setIsEditingFreq(false);
       setIsEditingQty(false);
-    } catch (err) {
-      alert((err as Error).message);
+      toast.success(
+        `Subscription ${action === "resume" ? "resumed" : action + "ed"} successfully`,
+      );
+    } catch (err: any) {
+      toast.error(err.friendlyMessage || `Failed to ${action} subscription`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -204,10 +215,11 @@ export default function SubscriptionDetailPage() {
             {subscription.status === "PAUSED" && (
               <Button
                 variant="outline"
+                isLoading={loading}
                 className="flex-1 sm:flex-initial h-14 px-6 border-primary/10 text-primary hover:bg-primary/5 rounded-2xl font-bold shadow-sm transition-all active:scale-95 text-[10px] uppercase tracking-widest"
                 onClick={() => handleAction("resume")}
               >
-                <Play className="mr-2 h-4 w-4" />
+                {!loading && <Play className="mr-2 h-4 w-4" />}
                 Resume
               </Button>
             )}
@@ -425,9 +437,10 @@ export default function SubscriptionDetailPage() {
 
                 <Button
                   className="w-full h-14 bg-secondary text-white hover:brightness-110 font-bold rounded-2xl border-none shadow-xl transition-all active:scale-[0.98] text-[10px] uppercase tracking-widest"
+                  isLoading={loading}
                   onClick={() => setIsSkipOpen(true)}
                 >
-                  <SkipForward className="mr-3 h-4 w-4" />
+                  {!loading && <SkipForward className="mr-3 h-4 w-4" />}
                   Skip This Delivery
                 </Button>
               </div>

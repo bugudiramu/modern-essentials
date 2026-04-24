@@ -1,10 +1,11 @@
-"use client"
+"use client";
 
-import { Button as ButtonPrimitive } from "@base-ui/react/button"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+import { Button as ButtonPrimitive } from "@base-ui/react/button";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 
-import { cn } from "../../lib/utils"
+import { cn } from "../../lib/utils";
 
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-[8px] border border-transparent bg-clip-padding text-sm font-bold whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-secondary/50 active:scale-95 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -16,8 +17,7 @@ const buttonVariants = cva(
           "border border-outline-variant/15 text-primary bg-transparent hover:bg-surface-container-low",
         outline:
           "border border-outline-variant/40 bg-transparent hover:bg-surface-container-low text-primary",
-        ghost:
-          "hover:bg-surface-container-low text-primary",
+        ghost: "hover:bg-surface-container-low text-primary",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20",
         link: "text-secondary underline-offset-4 hover:underline",
@@ -34,13 +34,15 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
-)
+  },
+);
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+  asChild?: boolean;
+  isLoading?: boolean;
 }
 
 function Button({
@@ -48,16 +50,23 @@ function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  isLoading = false,
+  children,
+  disabled,
   ...props
 }: ButtonProps) {
-  const Comp = asChild ? Slot : ButtonPrimitive
+  const Comp = asChild ? Slot : ButtonPrimitive;
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={isLoading || disabled}
       {...props}
-    />
-  )
+    >
+      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {children}
+    </Comp>
+  );
 }
 
-export { Button, buttonVariants }
+export { Button, buttonVariants };

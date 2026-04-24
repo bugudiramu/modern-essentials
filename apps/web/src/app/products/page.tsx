@@ -1,6 +1,6 @@
 import { ProductList } from "@/components/ProductList";
 import { Suspense } from "react";
-import { Heading, Badge, Skeleton } from "@modern-essentials/ui";
+import { Heading, Badge, ProductCardSkeleton } from "@modern-essentials/ui";
 export const runtime = "edge";
 
 export const dynamic = "force-dynamic";
@@ -59,9 +59,12 @@ export default async function ProductsPage({
         <Suspense
           fallback={
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-              <Skeleton className="h-96 rounded-[40px]" />
-              <Skeleton className="h-96 rounded-[40px]" />
-              <Skeleton className="h-96 rounded-[40px]" />
+              <ProductCardSkeleton />
+              <ProductCardSkeleton />
+              <ProductCardSkeleton />
+              <ProductCardSkeleton />
+              <ProductCardSkeleton />
+              <ProductCardSkeleton />
             </div>
           }
         >

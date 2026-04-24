@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiPatch } from "@/lib/api";
 import { NEXT_STATUS, ACTION_LABELS } from "@modern-essentials/utils";
+import { Button } from "@modern-essentials/ui";
+import { toast } from "sonner";
 
 interface OrderActionProps {
   orderId: string;
@@ -13,7 +15,7 @@ interface OrderActionProps {
 export function OrderAction({ orderId, currentStatus }: OrderActionProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  
+
   const nextStatus = NEXT_STATUS[currentStatus];
   const label = nextStatus ? ACTION_LABELS[nextStatus] : null;
 
@@ -23,22 +25,25 @@ export function OrderAction({ orderId, currentStatus }: OrderActionProps) {
     setLoading(true);
     try {
       await apiPatch(`admin/orders/${orderId}/status`, { status: nextStatus });
+      toast.success(`Order marked as ${nextStatus.toLowerCase()}`);
       router.refresh();
     } catch (err) {
       console.error("Failed to update status:", err);
-      alert("Failed to update status. Check console.");
+      toast.error("Failed to update order status");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <button
+    <Button
       onClick={handleTransition}
-      disabled={loading}
-      className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+      isLoading={loading}
+      variant="secondary"
+      size="sm"
+      className="bg-primary/10 text-primary hover:bg-primary/20 border-none"
     >
-      {loading ? "..." : label}
-    </button>
+      {label}
+    </Button>
   );
 }

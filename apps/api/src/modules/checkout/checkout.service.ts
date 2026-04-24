@@ -1,7 +1,11 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import Razorpay from "razorpay";
 import { PrismaService } from "../../common/prisma.service";
-import { CreateOrderDto, RazorpayOrderResponseDto, RazorpaySubscriptionResponseDto } from "./checkout.dto";
+import {
+  CreateOrderDto,
+  RazorpayOrderResponseDto,
+  RazorpaySubscriptionResponseDto,
+} from "./checkout.dto";
 
 @Injectable()
 export class CheckoutService {
@@ -18,25 +22,43 @@ export class CheckoutService {
     userId: string,
     createOrderDto: CreateOrderDto,
   ): Promise<RazorpaySubscriptionResponseDto> {
+    // 0. Stock Check
+    await this.validateStock(createOrderDto.items);
+
     const subItems = createOrderDto.items.filter((item) => item.isSubscription);
-    const oneTimeItems = createOrderDto.items.filter((item) => !item.isSubscription);
+    const oneTimeItems = createOrderDto.items.filter(
+      (item) => !item.isSubscription,
+    );
 
     if (subItems.length === 0) {
       throw new BadRequestException("No subscription items found in cart");
     }
 
-    // Calculate recurring total (usually there's only one sub item type per order in simple D2C, 
+    // Calculate recurring total (usually there's only one sub item type per order in simple D2C,
     // but we support multiple by creating a custom plan name)
-    const recurringAmount = subItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const upfrontAmount = oneTimeItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const recurringAmount = subItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
+    const upfrontAmount = oneTimeItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
 
     try {
       // 1. Get or Create a Razorpay Plan for this specific amount/frequency
       // Note: We use the first item's frequency as the primary frequency for simplicity
-      const frequency = (subItems[0].frequency?.toLowerCase() || "weekly") as "weekly" | "monthly";
+      const frequency = (subItems[0].frequency?.toLowerCase() || "weekly") as
+        | "weekly"
+        | "monthly";
       const planName = `Modern Essentials ${frequency.charAt(0).toUpperCase() + frequency.slice(1)} Subscription - ₹${recurringAmount / 100}`;
 
-      const razorpayPlan = await this.getOrCreateRazorpayPlan(subItems[0].variantId, planName, recurringAmount, frequency);
+      const razorpayPlan = await this.getOrCreateRazorpayPlan(
+        subItems[0].variantId,
+        planName,
+        recurringAmount,
+        frequency,
+      );
       // 2. Initiate the Razorpay Subscription
       const subscriptionOptions: any = {
         plan_id: razorpayPlan.id,
@@ -62,7 +84,8 @@ export class CheckoutService {
         ];
       }
 
-      const razorpaySubscription = await this.razorpay.subscriptions.create(subscriptionOptions);
+      const razorpaySubscription =
+        await this.razorpay.subscriptions.create(subscriptionOptions);
 
       // Save Subscription in DB with status PENDING (§3.1, Week 7)
       const primarySub = subItems[0];
@@ -71,8 +94,8 @@ export class CheckoutService {
           userId,
           variantId: primarySub.variantId,
           quantity: primarySub.quantity,
-          frequency: (primarySub.frequency || 'WEEKLY') as any,
-          status: 'PENDING',
+          frequency: (primarySub.frequency || "WEEKLY") as any,
+          status: "PENDING",
           razorpaySubscriptionId: razorpaySubscription.id,
           nextBillingAt: new Date(), // Placeholder until activated
           addressLine1: createOrderDto.address,
@@ -84,7 +107,9 @@ export class CheckoutService {
 
       return {
         subscriptionId: razorpaySubscription.id,
-        amount: Number(razorpaySubscription.charge_at) || (recurringAmount + upfrontAmount),
+        amount:
+          Number(razorpaySubscription.charge_at) ||
+          recurringAmount + upfrontAmount,
         currency: "INR",
         key: process.env.RAZORPAY_KEY_ID!,
         isHybrid: upfrontAmount > 0,
@@ -96,7 +121,12 @@ export class CheckoutService {
     }
   }
 
-  private async getOrCreateRazorpayPlan(variantId: string, name: string, amount: number, interval: "weekly" | "monthly") {
+  private async getOrCreateRazorpayPlan(
+    variantId: string,
+    name: string,
+    amount: number,
+    interval: "weekly" | "monthly",
+  ) {
     // Actually, I can search for a plan by name and amount in the DB
     const frequency = interval === "weekly" ? "WEEKLY" : "MONTHLY";
     const existingPlan = await this.prisma.subscriptionPlan.findFirst({
@@ -104,7 +134,7 @@ export class CheckoutService {
         variantId,
         amount,
         frequency: frequency as any,
-      }
+      },
     });
 
     if (existingPlan) {
@@ -139,6 +169,9 @@ export class CheckoutService {
     userId: string,
     createOrderDto: CreateOrderDto,
   ): Promise<RazorpayOrderResponseDto> {
+    // 0. Stock Check
+    await this.validateStock(createOrderDto.items);
+
     // Calculate total amount
     const totalAmount = createOrderDto.items.reduce(
       (sum, item) => sum + item.price * item.quantity,
@@ -204,13 +237,13 @@ export class CheckoutService {
       // 1. Verify signature using crypto
       const crypto = require("crypto");
       const secret = process.env.RAZORPAY_KEY_SECRET!;
-      
+
       // For subscriptions, the signature is based on payment_id + subscription_id
       // For orders, it's order_id + payment_id
-      const text = razorpay_subscription_id 
+      const text = razorpay_subscription_id
         ? `${razorpay_payment_id}|${razorpay_subscription_id}`
         : `${razorpay_order_id}|${razorpay_payment_id}`;
-      
+
       const generated_signature = crypto
         .createHmac("sha256", secret)
         .update(text)
@@ -222,22 +255,26 @@ export class CheckoutService {
 
       // 1.5 Ensure user exists in DB before transaction (Secondary safety check)
       const dbUser = await this.prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
       });
 
       if (!dbUser) {
-        console.error(`Checkout error: User with internal ID ${userId} not found in DB`);
-        throw new BadRequestException("User profile not found. Please ensure you are logged in.");
+        console.error(
+          `Checkout error: User with internal ID ${userId} not found in DB`,
+        );
+        throw new BadRequestException(
+          "User profile not found. Please ensure you are logged in.",
+        );
       }
 
       return await this.prisma.$transaction(async (tx) => {
         // 1.8 Inventory Check & Locking (Pessimistic Lock §9.1)
         // We must check and deduct inventory BEFORE creating the order to prevent overselling.
         // Sort items by variantId to prevent deadlocks (Lock Ordering §9.2)
-        const itemsToProcess = [...orderData.items].sort((a, b) => 
-          a.variantId.localeCompare(b.variantId)
+        const itemsToProcess = [...orderData.items].sort((a, b) =>
+          a.variantId.localeCompare(b.variantId),
         );
-        
+
         for (const item of itemsToProcess) {
           // Lock the batches for this variant to prevent concurrent updates
           // Use FEFO: Order by expires_at ASC
@@ -253,8 +290,17 @@ export class CheckoutService {
 
           const totalAvailable = batches.reduce((sum, b) => sum + b.qty, 0);
           if (totalAvailable < item.quantity) {
+            // Fetch product name for better error message
+            const variant = await tx.productVariant.findUnique({
+              where: { id: item.variantId },
+              include: { product: true },
+            });
+            const productName = variant
+              ? `${variant.product.name} (${variant.packSize}pk)`
+              : item.variantId;
+
             throw new BadRequestException(
-              `Insufficient stock for item ${item.variantId}. Available: ${totalAvailable}, Requested: ${item.quantity}`
+              `Insufficient stock for ${productName}. Available: ${totalAvailable}, Requested: ${item.quantity}`,
             );
           }
 
@@ -266,50 +312,50 @@ export class CheckoutService {
             const deduction = Math.min(batch.qty, remainingToDeduct);
             await tx.inventoryBatch.update({
               where: { id: batch.id },
-              data: { 
+              data: {
                 qty: batch.qty - deduction,
-                // If qty becomes 0, we could optionally change status, 
+                // If qty becomes 0, we could optionally change status,
                 // but 'AVAILABLE' with qty 0 is also handled by our queries.
-              }
+              },
             });
             remainingToDeduct -= deduction;
           }
         }
 
         // 2. Handle Subscription Items
-        const subItems = orderData.items.filter(item => item.isSubscription);
+        const subItems = orderData.items.filter((item) => item.isSubscription);
         let subscriptionId: string | undefined;
 
         if (subItems.length > 0 && razorpay_subscription_id) {
           // Find the existing PENDING subscription created during createSubscription
           const existingSub = await tx.subscription.findUnique({
-            where: { razorpaySubscriptionId: razorpay_subscription_id }
+            where: { razorpaySubscriptionId: razorpay_subscription_id },
           });
 
           if (existingSub) {
             subscriptionId = existingSub.id;
-            // The webhook will transition it to ACTIVE. 
-            // We can mark it as AUTHENTICATED if we want immediate feedback, 
+            // The webhook will transition it to ACTIVE.
+            // We can mark it as AUTHENTICATED if we want immediate feedback,
             // but for now let's just log the event.
             await tx.subscriptionEvent.create({
               data: {
                 subscriptionId: existingSub.id,
-                eventType: 'CREATED',
+                eventType: "CREATED",
                 description: `Mandate authenticated via Razorpay ID: ${razorpay_subscription_id}`,
-                metadata: { razorpay_subscription_id, razorpay_payment_id }
-              }
+                metadata: { razorpay_subscription_id, razorpay_payment_id },
+              },
             });
           } else {
             // Fallback: Create if not exists (should not happen with Week 7 flow)
             const primarySub = subItems[0];
-            const frequency = (primarySub.frequency || 'WEEKLY') as any;
+            const frequency = (primarySub.frequency || "WEEKLY") as any;
             const subscription = await tx.subscription.create({
               data: {
                 userId: dbUser.id,
                 variantId: primarySub.variantId,
                 quantity: primarySub.quantity,
                 frequency,
-                status: 'PENDING',
+                status: "PENDING",
                 razorpaySubscriptionId: razorpay_subscription_id,
                 nextBillingAt: new Date(),
                 addressLine1: orderData.address,
@@ -323,7 +369,9 @@ export class CheckoutService {
         }
 
         // 3. Handle One-Time Items (or Upfront Addons for hybrid carts)
-        const oneTimeItems = orderData.items.filter(item => !item.isSubscription);
+        const oneTimeItems = orderData.items.filter(
+          (item) => !item.isSubscription,
+        );
         let orderId: string | undefined;
 
         // Even if it's 100% subscription, the first delivery is an Order
@@ -383,7 +431,9 @@ export class CheckoutService {
       });
     } catch (error: any) {
       console.error("Payment verification failed:", error);
-      throw new BadRequestException(error.message || "Payment verification failed");
+      throw new BadRequestException(
+        error.message || "Payment verification failed",
+      );
     }
   }
 
@@ -442,6 +492,40 @@ export class CheckoutService {
     } catch (error) {
       console.error("Subscription resume failed:", error);
       throw new BadRequestException("Failed to resume subscription");
+    }
+  }
+
+  private async validateStock(items: any[]) {
+    for (const item of items) {
+      // Aggregate available qty from PASSED batches
+      const stockAggregation = await this.prisma.inventoryBatch.aggregate({
+        where: {
+          variantId: item.variantId,
+          status: "AVAILABLE",
+          qcStatus: "PASSED",
+          qty: { gt: 0 },
+        },
+        _sum: {
+          qty: true,
+        },
+      });
+
+      const availableQty = stockAggregation._sum.qty || 0;
+
+      if (availableQty < item.quantity) {
+        // Fetch product name for better error message
+        const variant = await this.prisma.productVariant.findUnique({
+          where: { id: item.variantId },
+          include: { product: true },
+        });
+        const productName = variant
+          ? `${variant.product.name} (${variant.packSize}pk)`
+          : item.variantId;
+
+        throw new BadRequestException(
+          `Insufficient stock for ${productName}. Available: ${availableQty}, Requested: ${item.quantity}`,
+        );
+      }
     }
   }
 }

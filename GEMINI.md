@@ -1,14 +1,17 @@
 # GEMINI.md - Modern Essentials Project Context
 
 ## Project Overview
+
 **Modern Essentials** is a subscription-first D2C fresh essentials brand built with a focus on radical transparency and honest marketing. The project is a **Turborepo monorepo** using **PNPM**.
 
 ### Tech Stack
+
 - **Frontend:** Next.js 14, Tailwind CSS, shadcn/ui, Clerk (Auth)
 - **Backend:** NestJS, Prisma (ORM), BullMQ (Scheduling), PostgreSQL, Redis
 - **Infrastructure:** Turborepo, PNPM, Docker, AWS S3, Sanity.io (CMS)
 
 ## Directory Structure & Local Context
+
 Each major directory contains its own `GEMINI.md` with localized context.
 
 - `apps/web`: [Web Storefront](./apps/web/GEMINI.md) - Customer-facing Next.js app.
@@ -22,6 +25,7 @@ Each major directory contains its own `GEMINI.md` with localized context.
 - `packages/config`: [Shared Config](./packages/config/GEMINI.md) - Linter, TS, and Tailwind configs.
 
 ## Key Business Logic (The Core Mandates)
+
 - **Subscription-First:** Primary purchase mode is recurring subscriptions.
 - **FEFO Law:** "First Expired, First Out" logic is mandatory for perishables.
 - **Radical Transparency:** Cost breakdowns and batch traceability are core.
@@ -32,6 +36,7 @@ Each major directory contains its own `GEMINI.md` with localized context.
 ## Development Workflow
 
 ### Core Commands
+
 - `pnpm dev`: Starts all applications in parallel.
 - `pnpm build`: Builds all applications and packages.
 - `pnpm test`: Runs the test suite across the monorepo.
@@ -39,18 +44,28 @@ Each major directory contains its own `GEMINI.md` with localized context.
 - `pnpm db:generate`: Generates the Prisma client.
 
 ### Conventions
+
 - **TypeScript:** Strict mode everywhere. No `any`.
 - **Git:** Conventional Commits are enforced.
 - **NestJS:** module/controller/service/dto pattern for every module.
 - **Prisma:** Always `ORDER BY expires_at ASC` when picking inventory.
 
+### UI/UX & Reliability Mandates
+
+- **Component Strictness:** 100% reliance on `shadcn/ui` components. Do not write custom CSS or custom components if a `shadcn` equivalent exists.
+- **Error Handling:** Proper frontend/backend error handling is required. API calls must be wrapped in `try/catch` and failures must be gracefully parsed and displayed.
+- **Loading Indicators:** All CTAs, forms, and data fetching must have explicit loading states (spinners, skeletons, disabled buttons) to prevent duplicate actions.
+- **User Feedback:** Clear success and failure messages (via `sonner` or `use-toast` notifications) are mandatory for all interactions.
+
 ## Recent Architectural Changes
+
 - **Product Variants:** Transitioned from simple products to a Variant-based model.
 - **Dunning Workflow:** Automated retry logic for failed subscription payments.
 - **Inventory Reconciliation:** System for syncing physical vs system stock levels.
 - **Partner Links:** Integration for Quick Commerce links (Zepto, Blinkit).
 
 ## Documentation & References
+
 - `modern_essentials_blueprint_v2.md`: Detailed vision and roadmap.
 - `ISSUES_SUMMARY.md`: Current known issues and debt.
 - `TESTING_CHECKLIST.md`: Pre-deployment procedures.

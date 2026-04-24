@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuth, useUser } from "@clerk/nextjs";
+import { toast } from "sonner";
+import { ApiError } from "@modern-essentials/utils";
 import {
   createContext,
   ReactNode,
@@ -203,10 +205,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
           dispatch({ type: "SET_CART", payload: cartData });
           persistToLocalStorage(cartData);
           dispatch({ type: "OPEN_CART" });
+          toast.success("Added to cart");
           return;
+        } else {
+          const error = await ApiError.fromResponse(res);
+          toast.error(error.friendlyMessage);
         }
       } catch (error) {
         console.error("Failed to add item via API:", error);
+        toast.error("Failed to add item to cart");
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
       }
     }
 
@@ -282,6 +291,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const updateItem = async (itemId: string, quantity: number) => {
+    dispatch({ type: "SET_LOADING", payload: true });
     if (isSignedIn && user) {
       try {
         const token = (await getToken()) || user?.id || "test-user-123";
@@ -299,9 +309,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
           dispatch({ type: "SET_CART", payload: cartData });
           persistToLocalStorage(cartData);
           return;
+        } else {
+          const error = await ApiError.fromResponse(res);
+          toast.error(error.friendlyMessage);
         }
       } catch (error) {
         console.error("Failed to update item via API:", error);
+        toast.error("Failed to update quantity");
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
       }
     }
 
@@ -324,6 +340,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeItem = async (itemId: string) => {
+    dispatch({ type: "SET_LOADING", payload: true });
     if (isSignedIn && user) {
       try {
         const token = (await getToken()) || user?.id || "test-user-123";
@@ -338,10 +355,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const cartData = await res.json();
           dispatch({ type: "SET_CART", payload: cartData });
           persistToLocalStorage(cartData);
+          toast.success("Removed from cart");
           return;
+        } else {
+          const error = await ApiError.fromResponse(res);
+          toast.error(error.friendlyMessage);
         }
       } catch (error) {
         console.error("Failed to remove item via API:", error);
+        toast.error("Failed to remove item");
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
       }
     }
 
@@ -357,25 +381,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const cartData = { items: currentItems, totalItems, totalAmount };
     dispatch({ type: "SET_CART", payload: cartData });
     persistToLocalStorage(cartData);
+    dispatch({ type: "SET_LOADING", payload: false });
+    toast.success("Removed from cart");
   };
 
   const clearCart = async () => {
+    dispatch({ type: "SET_LOADING", payload: true });
     if (isSignedIn && user) {
       try {
         const token = (await getToken()) || user?.id || "test-user-123";
-        await fetch(`${apiUrl}/cart`, {
+        const res = await fetch(`${apiUrl}/cart`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+        if (!res.ok) {
+          const error = await ApiError.fromResponse(res);
+          toast.error(error.friendlyMessage);
+        }
       } catch (error) {
         console.error("Failed to clear cart via API:", error);
+        toast.error("Failed to clear cart");
       }
     }
     const cartData = { items: [], totalItems: 0, totalAmount: 0 };
     dispatch({ type: "SET_CART", payload: cartData });
     persistToLocalStorage(cartData);
+    dispatch({ type: "SET_LOADING", payload: false });
   };
 
   const toggleCart = () => dispatch({ type: "TOGGLE_CART" });
