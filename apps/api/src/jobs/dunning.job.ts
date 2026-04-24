@@ -3,13 +3,17 @@ import { Job } from "bullmq";
 import { Logger } from "@nestjs/common";
 import { SubscriptionService } from "../modules/subscription/subscription.service";
 
-@Processor("dunning")
+@Processor("dunning", {
+  lockDuration: 60000,
+  stalledInterval: 60000,
+  maxStalledCount: 1,
+  // Reducing polling frequency for Upstash
+  drainDelay: 10,
+})
 export class DunningProcessor extends WorkerHost {
   private readonly logger = new Logger(DunningProcessor.name);
 
-  constructor(
-    private subscriptionService: SubscriptionService,
-  ) {
+  constructor(private subscriptionService: SubscriptionService) {
     super();
   }
 
@@ -20,14 +24,19 @@ export class DunningProcessor extends WorkerHost {
 
     try {
       if (job.name === "retry") {
-        await this.subscriptionService.processDunningAttempt(subscriptionId, attempt);
+        await this.subscriptionService.processDunningAttempt(
+          subscriptionId,
+          attempt,
+        );
       } else if (job.name === "auto-cancel") {
         await this.subscriptionService.autoCancel(subscriptionId);
       }
 
       return { processed: true };
     } catch (error: any) {
-      this.logger.error(`Failed to process dunning job ${job.id}: ${error.message}`);
+      this.logger.error(
+        `Failed to process dunning job ${job.id}: ${error.message}`,
+      );
       throw error;
     }
   }

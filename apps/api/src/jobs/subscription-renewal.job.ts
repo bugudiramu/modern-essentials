@@ -3,7 +3,13 @@ import { Logger } from "@nestjs/common";
 import { Job } from "bullmq";
 import { SubscriptionService } from "../modules/subscription/subscription.service";
 
-@Processor("subscription-renewal")
+@Processor("subscription-renewal", {
+  lockDuration: 60000,
+  stalledInterval: 60000,
+  maxStalledCount: 1,
+  // Reducing polling frequency for Upstash
+  drainDelay: 10,
+})
 export class SubscriptionRenewalProcessor extends WorkerHost {
   private readonly logger = new Logger(SubscriptionRenewalProcessor.name);
 

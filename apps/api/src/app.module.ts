@@ -34,6 +34,17 @@ import { PrismaModule } from "./common/prisma.module";
     BullModule.forRoot({
       connection: {
         url: process.env.REDIS_URL || "redis://localhost:6379",
+        // Upstash recommended settings for BullMQ
+        maxRetriesPerRequest: null,
+      },
+      defaultJobOptions: {
+        removeOnComplete: 1000,
+        removeOnFail: 5000,
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 1000,
+        },
       },
     }),
   ],
