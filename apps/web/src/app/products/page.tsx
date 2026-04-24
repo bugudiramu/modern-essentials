@@ -1,7 +1,6 @@
 import { ProductList } from "@/components/ProductList";
 import { Suspense } from "react";
 import { Heading, Badge, ProductCardSkeleton } from "@modern-essentials/ui";
-export const runtime = "edge";
 
 export const dynamic = "force-dynamic";
 

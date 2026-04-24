@@ -35,7 +35,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ApiError } from "@modern-essentials/utils";
 import * as z from "zod";
 import Image from "next/image";
-export const runtime = "edge";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
