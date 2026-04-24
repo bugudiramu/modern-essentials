@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Heading, Badge, ProductCardSkeleton } from "@modern-essentials/ui";
 
 export const dynamic = "force-dynamic";
+export const runtime = "edge";
 
 async function getProducts(category?: string) {
   // In production, we use the Next.js rewrite /api proxy

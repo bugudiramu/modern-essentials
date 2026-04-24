@@ -10,18 +10,19 @@ import { Toaster, TooltipProvider } from "@modern-essentials/ui";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
+export const runtime = "edge";
 
-const spaceGrotesk = Space_Grotesk({ 
-  subsets: ["latin"], 
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
   display: "swap",
-  variable: "--font-sans" 
+  variable: "--font-sans",
 });
 
-const fraunces = Fraunces({ 
-  subsets: ["latin"], 
+const fraunces = Fraunces({
+  subsets: ["latin"],
   weight: ["400", "700", "800"],
   display: "swap",
-  variable: "--font-serif" 
+  variable: "--font-serif",
 });
 
 export const metadata: Metadata = {
@@ -38,7 +39,14 @@ export default function RootLayout({
     <ClerkProvider>
       <CartProvider>
         <TooltipProvider>
-          <html lang="en" className={cn("font-sans antialiased", spaceGrotesk.variable, fraunces.variable)}>
+          <html
+            lang="en"
+            className={cn(
+              "font-sans antialiased",
+              spaceGrotesk.variable,
+              fraunces.variable,
+            )}
+          >
             <body className="bg-background text-foreground min-h-screen flex flex-col selection:bg-secondary/20 selection:text-primary">
               <UserHeader />
               <CartSidebar />
