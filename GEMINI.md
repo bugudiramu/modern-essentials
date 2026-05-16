@@ -69,3 +69,5 @@ Each major directory contains its own `GEMINI.md` with localized context.
 - `modern_essentials_blueprint_v2.md`: Detailed vision and roadmap.
 - `ISSUES_SUMMARY.md`: Current known issues and debt.
 - `TESTING_CHECKLIST.md`: Pre-deployment procedures.
+- `planning/modern_essentials_design_system/DESIGN.md`: Complete Modern Essentials Design System documentation.
+- `ARCHITECTURE.md`: High-level system architecture and component overview.
