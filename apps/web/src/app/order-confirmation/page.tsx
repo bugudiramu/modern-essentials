@@ -21,7 +21,6 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 export const runtime = "edge";
 
-
 interface OrderDetails {
   orderId: string;
   paymentId: string;
@@ -110,8 +109,8 @@ function OrderConfirmationContent() {
               variant="lead"
               className="text-primary/60 max-w-xl mx-auto italic font-headline text-base md:text-lg"
             >
-              Thank you for choosing Modern Essentials. Your fresh delivery is
-              being curated with radical transparency and care.
+              Thank you for choosing The Honest Essentials. Your fresh delivery
+              is being curated with radical transparency and care.
             </Text>
           </div>
         </div>
@@ -252,7 +251,7 @@ function OrderConfirmationContent() {
                     Continue Your Curation
                   </Heading>
                   <Text className="text-white/60 leading-relaxed text-sm">
-                    Your journey with Modern Essentials doesn't end here.
+                    Your journey with The Honest Essentials doesn't end here.
                     Explore your personalized dashboard or continue discovering
                     fresh essentials.
                   </Text>

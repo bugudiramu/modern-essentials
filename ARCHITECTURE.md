@@ -1,8 +1,8 @@
-# Modern Essentials Architecture
+# The Honest Essentials Architecture
 
 ## Overview
 
-Modern Essentials is a subscription-first D2C platform designed for radical transparency and operational efficiency. The system is built as a **Turborepo monorepo** to ensure type safety and code sharing across all services.
+The Honest Essentials is a subscription-first D2C platform designed for radical transparency and operational efficiency. The system is built as a **Turborepo monorepo** to ensure type safety and code sharing across all services.
 
 ## Monorepo Structure
 
@@ -31,7 +31,7 @@ Modern Essentials is a subscription-first D2C platform designed for radical tran
 
 ## Design System
 
-The visual and interactive language of Modern Essentials is defined in the centralized Design System documentation.
+The visual and interactive language of The Honest Essentials is defined in the centralized Design System documentation.
 
 - **Design System Reference**: [`planning/modern_essentials_design_system/DESIGN.md`](./planning/modern_essentials_design_system/DESIGN.md)
 

@@ -25,9 +25,10 @@ export default function ShippingPage() {
               1. Delivery Service Area
             </Heading>
             <Text className="text-primary/70 leading-relaxed">
-              Modern Essentials currently operates in select metropolitan areas
-              to ensure the highest standards of freshness. We only deliver to
-              locations where we can guarantee a 24-48 hour farm-to-door window.
+              The Honest Essentials currently operates in select metropolitan
+              areas to ensure the highest standards of freshness. We only
+              deliver to locations where we can guarantee a 24-48 hour
+              farm-to-door window.
             </Text>
           </section>
 

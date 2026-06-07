@@ -51,7 +51,7 @@ export class CheckoutService {
       const frequency = (subItems[0].frequency?.toLowerCase() || "weekly") as
         | "weekly"
         | "monthly";
-      const planName = `Modern Essentials ${frequency.charAt(0).toUpperCase() + frequency.slice(1)} Subscription - ₹${recurringAmount / 100}`;
+      const planName = `The Honest Essentials ${frequency.charAt(0).toUpperCase() + frequency.slice(1)} Subscription - ₹${recurringAmount / 100}`;
 
       const razorpayPlan = await this.getOrCreateRazorpayPlan(
         subItems[0].variantId,
@@ -148,7 +148,7 @@ export class CheckoutService {
         name,
         amount: amount,
         currency: "INR",
-        description: "Modern Essentials Recurring Order",
+        description: "The Honest Essentials Recurring Order",
       },
     });
 

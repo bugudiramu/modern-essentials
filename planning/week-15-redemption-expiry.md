@@ -7,14 +7,14 @@
 
 ## Current State (End of Week 14)
 
-| Area | Status |
-|---|---|
+| Area           | Status                                                                                        |
+| -------------- | --------------------------------------------------------------------------------------------- |
 | Rewards ledger | Append-only ledger working. Points earned on delivered orders (10/₹100 sub, 5/₹100 one-time). |
-| Balance | `SUM(amount)` computation. User-facing balance display + history. |
-| Milestones | 3-month (+300) and 6-month (+600) milestone rewards. BullMQ job. |
-| Redemption | **Not implemented**. No way to use points at checkout. |
-| Expiry | **Not implemented**. Points never expire. No inactivity tracking. |
-| Checkout | One-time + subscription checkout working. **No points application step**. |
+| Balance        | `SUM(amount)` computation. User-facing balance display + history.                             |
+| Milestones     | 3-month (+300) and 6-month (+600) milestone rewards. BullMQ job.                              |
+| Redemption     | **Not implemented**. No way to use points at checkout.                                        |
+| Expiry         | **Not implemented**. Points never expire. No inactivity tracking.                             |
+| Checkout       | One-time + subscription checkout working. **No points application step**.                     |
 
 ---
 
@@ -32,60 +32,62 @@
 
 ### Deliverable 1 — Checkout Points Redemption
 
-| Rule | Detail |
-|---|---|
-| Minimum | 100 points minimum to redeem. |
-| Conversion | 100 points = ₹10 discount. (1 point = ₹0.10) |
-| Maximum | Cannot exceed order total. Points cover up to 100% of order value. |
-| Partial | User can choose how many points to apply (slider or input). |
-| Ledger entry | Negative entry: `type: REDEMPTION`, `amount: -N`, `refId: orderId`. |
-| Atomicity | Points deduction and order creation in the same `prisma.$transaction`. |
+| Rule            | Detail                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------- |
+| Minimum         | 100 points minimum to redeem.                                                               |
+| Conversion      | 100 points = ₹10 discount. (1 point = ₹0.10)                                                |
+| Maximum         | Cannot exceed order total. Points cover up to 100% of order value.                          |
+| Partial         | User can choose how many points to apply (slider or input).                                 |
+| Ledger entry    | Negative entry: `type: REDEMPTION`, `amount: -N`, `refId: orderId`.                         |
+| Atomicity       | Points deduction and order creation in the same `prisma.$transaction`.                      |
 | Post-redemption | If order is cancelled/refunded, points are re-credited (+N entry with `type: EARN_REFUND`). |
 
 **Redemption flow:**
+
 1. User reaches checkout page.
 2. If `balance >= 100`, show rewards application panel.
-3. User selects points to apply (slider: 0 → min(balance, orderTotal * 10)).
+3. User selects points to apply (slider: 0 → min(balance, orderTotal \* 10)).
 4. Order total updates in real-time: `discountedTotal = total - (pointsApplied / 10)`.
 5. On payment: deduct points via `ledger.appendEntry()` in same transaction as order creation.
 
 ### Deliverable 2 — Points Expiry Logic
 
-| Rule | Detail |
-|---|---|
-| Trigger | 12 months of inactivity (no order placed, no subscription active). |
-| Warning | 30 days before expiry: WhatsApp + email notification with points balance. |
-| Expiry action | BullMQ job: expire all points by appending `type: EXPIRY`, `amount: -balance`. |
+| Rule          | Detail                                                                                |
+| ------------- | ------------------------------------------------------------------------------------- |
+| Trigger       | 12 months of inactivity (no order placed, no subscription active).                    |
+| Warning       | 30 days before expiry: WhatsApp + email notification with points balance.             |
+| Expiry action | BullMQ job: expire all points by appending `type: EXPIRY`, `amount: -balance`.        |
 | Re-activation | If user places an order during the 30-day warning period, reset the inactivity clock. |
 
 **Inactivity detection:**
+
 - Check user's last earning entry date (`MAX(createdAt) FROM ledger_entries WHERE type LIKE 'EARN_%'`).
 - If > 335 days ago (12 months - 30 day warning): send warning.
 - If > 365 days ago: expire all points.
 
 ### Deliverable 3 — Checkout UI Updates
 
-| Component | Detail |
-|---|---|
+| Component          | Detail                                                                                                     |
+| ------------------ | ---------------------------------------------------------------------------------------------------------- |
 | `RewardsApply.tsx` | Panel in checkout: "You have X points (₹Y value). Apply?" Slider for point amount. Real-time total update. |
-| Checkout page | Insert rewards step between order summary and payment. |
-| Confirmation page | Show points redeemed as line item in order summary. |
+| Checkout page      | Insert rewards step between order summary and payment.                                                     |
+| Confirmation page  | Show points redeemed as line item in order summary.                                                        |
 
 ### Deliverable 4 — Expiry Warning Notifications
 
-| Template | Channel | Content |
-|---|---|---|
-| `points-expiry-warning.tsx` | Email | "Your 2,450 points (₹245 value) will expire in 30 days. Place an order to keep them active!" |
-| `points-expiry-wa` | WhatsApp | "Your Modern Essentials points expire soon! You have ₹245 in rewards. Shop now: [link]" |
-| `points-expired.tsx` | Email | "Your points have expired. Start earning again with your next order." |
+| Template                    | Channel  | Content                                                                                      |
+| --------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| `points-expiry-warning.tsx` | Email    | "Your 2,450 points (₹245 value) will expire in 30 days. Place an order to keep them active!" |
+| `points-expiry-wa`          | WhatsApp | "Your The Honest Essentials points expire soon! You have ₹245 in rewards. Shop now: [link]"  |
+| `points-expired.tsx`        | Email    | "Your points have expired. Start earning again with your next order."                        |
 
 ### Deliverable 5 — Rewards Dashboard Updates
 
-| Update | Detail |
-|---|---|
-| Expiry warning | If points are approaching expiry, show countdown: "Your points expire in X days". |
-| Redemption history | Filter earning history by `REDEMPTION` type. Show "Used at checkout" entries. |
-| Refund entries | Show "Points refunded" entries for cancelled orders. |
+| Update             | Detail                                                                            |
+| ------------------ | --------------------------------------------------------------------------------- |
+| Expiry warning     | If points are approaching expiry, show countdown: "Your points expire in X days". |
+| Redemption history | Filter earning history by `REDEMPTION` type. Show "Used at checkout" entries.     |
+| Refund entries     | Show "Points refunded" entries for cancelled orders.                              |
 
 ---
 
@@ -96,20 +98,25 @@
 ---
 
 #### [MODIFY] `apps/api/src/modules/ledger/ledger.service.ts`
+
 - `applyRedemption(userId, orderId, points)` — validates balance ≥ points, appends negative entry.
 - `refundRedemption(userId, orderId)` — re-credits points from cancelled/refunded order.
 - `checkExpiry(userId)` — checks inactivity and returns days until expiry.
 
 #### [NEW] `apps/api/src/jobs/points-expiry.job.ts`
+
 BullMQ job (runs daily): checks all users for 30-day warning and 365-day expiry.
 
 #### [MODIFY] `apps/api/src/modules/checkout/checkout.service.ts`
+
 In `verifyPayment()`: if points applied, call `ledger.applyRedemption()` in the same transaction.
 
 #### [MODIFY] `apps/api/src/modules/orders/orders.service.ts`
+
 On `→ REFUNDED` or `→ CANCELLED`: if order had points redeemed, call `ledger.refundRedemption()`.
 
 #### [MODIFY] `apps/api/src/app.module.ts`
+
 Register `points-expiry` BullMQ queue.
 
 ---
@@ -119,14 +126,17 @@ Register `points-expiry` BullMQ queue.
 ---
 
 #### [MODIFY] `packages/db/schema.prisma`
+
 - Add `pointsRedeemed: Int @default(0)` to `Order` model.
 - Add `EARN_REFUND` to `LedgerType` enum.
 - Run: `pnpm db:generate && pnpm db:migrate`.
 
 #### [NEW] `packages/email/emails/points-expiry-warning.tsx`
+
 Expiry warning email template.
 
 #### [NEW] `packages/email/emails/points-expired.tsx`
+
 Points expired notification template.
 
 ---
@@ -136,24 +146,28 @@ Points expired notification template.
 ---
 
 #### [NEW] `apps/web/src/components/checkout/RewardsApply.tsx`
+
 Points application panel with slider, balance display, and real-time total update.
 
 #### [MODIFY] `apps/web/src/app/checkout/page.tsx`
+
 Insert `RewardsApply` component between order summary and payment button.
 
 #### [MODIFY] `apps/web/src/app/order-confirmation/page.tsx`
+
 Show "Points redeemed: -X pts (₹Y)" as order line item if applicable.
 
 #### [MODIFY] `apps/web/src/app/account/rewards/page.tsx`
+
 Add expiry warning card and redemption history filter.
 
 ---
 
 ## Dependencies to Install
 
-| Package | Where | Why |
-|---|---|---|
-| No new packages required | — | All infrastructure already in place. |
+| Package                  | Where | Why                                  |
+| ------------------------ | ----- | ------------------------------------ |
+| No new packages required | —     | All infrastructure already in place. |
 
 ---
 
@@ -171,9 +185,11 @@ Add expiry warning card and redemption history filter.
 ### Automated Tests
 
 1. **Redemption tests** — `apps/api/src/modules/ledger/ledger.service.spec.ts`:
+
    ```bash
    cd apps/api && pnpm jest --testPathPattern=ledger
    ```
+
    - Test `applyRedemption()` creates negative ledger entry
    - Test `applyRedemption()` rejects if balance < 100 points
    - Test `applyRedemption()` rejects if points > balance

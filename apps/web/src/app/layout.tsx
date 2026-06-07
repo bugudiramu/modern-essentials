@@ -26,7 +26,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Modern Essentials",
+  title: "The Honest Essentials",
   description: "Fresh essentials, delivered.",
 };
 

@@ -25,11 +25,11 @@ export default function TermsPage() {
               1. Agreement to Terms
             </Heading>
             <Text className="text-primary/70 leading-relaxed">
-              By accessing or using the Modern Essentials platform, you agree to
-              be bound by these Terms of Service. If you do not agree to all of
-              these terms, do not use our services. Modern Essentials provides a
-              subscription-based delivery service for fresh essentials,
-              including perishables.
+              By accessing or using the The Honest Essentials platform, you
+              agree to be bound by these Terms of Service. If you do not agree
+              to all of these terms, do not use our services. The Honest
+              Essentials provides a subscription-based delivery service for
+              fresh essentials, including perishables.
             </Text>
           </section>
 
@@ -41,8 +41,8 @@ export default function TermsPage() {
             </Heading>
             <Text className="text-primary/70 leading-relaxed">
               Our service is primary subscription-based. By signing up, you
-              authorize Modern Essentials to charge your chosen payment method
-              at the frequency selected (Weekly/Monthly).
+              authorize The Honest Essentials to charge your chosen payment
+              method at the frequency selected (Weekly/Monthly).
             </Text>
             <ul className="list-disc pl-5 space-y-2 text-primary/70">
               <li>
@@ -71,9 +71,9 @@ export default function TermsPage() {
               3. Perishables & Safety
             </Heading>
             <Text className="text-primary/70 leading-relaxed">
-              Modern Essentials prioritizes radical transparency and freshness.
-              However, once delivered, the handling of perishable items is the
-              responsibility of the customer.
+              The Honest Essentials prioritizes radical transparency and
+              freshness. However, once delivered, the handling of perishable
+              items is the responsibility of the customer.
             </Text>
             <ul className="list-disc pl-5 space-y-2 text-primary/70">
               <li>
@@ -85,9 +85,9 @@ export default function TermsPage() {
                 logic. Always check the "Best Before" date on the packaging.
               </li>
               <li>
-                <strong>Liability:</strong> Modern Essentials is not responsible
-                for health issues resulting from improper storage, consumption
-                of expired items, or undisclosed allergies.
+                <strong>Liability:</strong> The Honest Essentials is not
+                responsible for health issues resulting from improper storage,
+                consumption of expired items, or undisclosed allergies.
               </li>
             </ul>
           </section>
@@ -113,7 +113,7 @@ export default function TermsPage() {
               5. Limitation of Liability
             </Heading>
             <Text className="text-primary/70 leading-relaxed">
-              Modern Essentials shall not be liable for any indirect,
+              The Honest Essentials shall not be liable for any indirect,
               incidental, special, consequential, or punitive damages resulting
               from your use of the service or consumption of any products
               provided.

@@ -68,7 +68,7 @@ export default async function CategoriesPage() {
                   <Text className="text-primary/60 font-medium leading-relaxed">
                     Browse our selection of{" "}
                     {category.replace(/_/g, " ").toLowerCase()} products curated
-                    for the modern home.
+                    for the honest essentials home.
                   </Text>
                 </div>
 

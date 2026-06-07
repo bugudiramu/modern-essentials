@@ -1,4 +1,4 @@
-# Modern Essentials — Design System
+# The Honest Essentials — Design System
 
 **Version 1.0 · Living Document · Update when tokens change**
 
@@ -34,7 +34,7 @@
 
 ## 1. Design Philosophy
 
-Modern Essentials is a **premium, trust-first food brand**. The design language must communicate:
+The Honest Essentials is a **premium, trust-first food brand**. The design language must communicate:
 
 - **Freshness** — organic warmth, never clinical white
 - **Transparency** — clean layouts, no clutter, nothing to hide
@@ -1002,7 +1002,7 @@ pnpm add lucide-react
 
 ## 12. Navigation
 
-### Structure (from Gromuse reference, adapted for Modern Essentials)
+### Structure (from Gromuse reference, adapted for The Honest Essentials)
 
 ```
 [Brand logo]  [Nav links: Shop · Farms · About · Blog]  [Search icon · Cart · Subscribe btn]
@@ -1480,7 +1480,7 @@ One-time is de-emphasised.
 
 ## 18. Component Patterns (from Gromuse Reference)
 
-These patterns from the Gromuse screenshots translate well to Modern Essentials with brand tokens applied.
+These patterns from the Gromuse screenshots translate well to The Honest Essentials with brand tokens applied.
 
 ### Announcement Bar (top of page)
 

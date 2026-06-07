@@ -39,7 +39,7 @@ export class NotificationDispatchProcessor extends WorkerHost {
         const html = `<html><body>Template: ${template} | Data: ${JSON.stringify(data)}</body></html>`;
         await this.emailAdapter.sendEmail(
           to,
-          `Modern Essentials: ${template}`,
+          `The Honest Essentials: ${template}`,
           html,
         );
       } else if (job.name === "whatsapp") {

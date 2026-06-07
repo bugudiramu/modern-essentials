@@ -1,4 +1,4 @@
-// Week 1 Prisma Schema for Modern Essentials
+// Week 1 Prisma Schema for The Honest Essentials
 // Tables: users, products, orders, inventory_batches, webhook_events
 // Week 4 Addition: subscriptions, subscription_events, ledger_entries
 

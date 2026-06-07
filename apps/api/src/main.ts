@@ -43,9 +43,15 @@ async function bootstrap(): Promise<void> {
     if (allowedOrigins.includes(origin)) {
       res.header("Access-Control-Allow-Origin", origin);
     }
-    
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With");
+
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+    );
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, Accept, X-Requested-With",
+    );
     res.header("Access-Control-Allow-Credentials", "true");
 
     if (req.method === "OPTIONS") {
@@ -57,7 +63,7 @@ async function bootstrap(): Promise<void> {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle("Modern Essentials API")
+    .setTitle("The Honest Essentials API")
     .setDescription("Subscription-first D2C fresh essentials platform")
     .setVersion("0.1.0")
     .addBearerAuth()

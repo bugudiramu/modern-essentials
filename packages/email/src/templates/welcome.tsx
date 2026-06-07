@@ -1,23 +1,38 @@
-import * as React from 'react';
-import { Html, Button, Head, Preview, Body, Container, Text, Heading } from '@react-email/components';
+import * as React from "react";
+import {
+  Html,
+  Button,
+  Head,
+  Preview,
+  Body,
+  Container,
+  Text,
+  Heading,
+} from "@react-email/components";
 
 interface WelcomeEmailProps {
   name: string;
 }
 
-export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({
-  name,
-}) => {
+export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({ name }) => {
   return (
     <Html>
       <Head />
-      <Preview>Welcome to Modern Essentials!</Preview>
-      <Body style={{ fontFamily: 'system-ui, sans-serif' }}>
+      <Preview>Welcome to The Honest Essentials!</Preview>
+      <Body style={{ fontFamily: "system-ui, sans-serif" }}>
         <Container>
           <Heading>Welcome, {name}!</Heading>
-          <Text>We're thrilled to have you join the Modern Essentials family.</Text>
-          <Text>Our mission is to bring radical transparency and the freshest essentials directly to your doorstep.</Text>
-          <Text>Starting with farm-fresh eggs, we're redefining what it means to eat honestly.</Text>
+          <Text>
+            We're thrilled to have you join the The Honest Essentials family.
+          </Text>
+          <Text>
+            Our mission is to bring radical transparency and the freshest
+            essentials directly to your doorstep.
+          </Text>
+          <Text>
+            Starting with farm-fresh eggs, we're redefining what it means to eat
+            honestly.
+          </Text>
           <Button href="https://modernessentials.in/products">
             Start Shopping
           </Button>

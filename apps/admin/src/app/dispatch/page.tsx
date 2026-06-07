@@ -272,7 +272,7 @@ export default function DispatchPage() {
         {/* Print footer */}
         <div className="hidden print:block mt-12 border-t border-primary/20 pt-6">
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            Modern Essentials &mdash; Shipment Manifest &mdash; Printed{" "}
+            The Honest Essentials &mdash; Shipment Manifest &mdash; Printed{" "}
             {new Date().toLocaleDateString("en-IN")}
           </p>
         </div>

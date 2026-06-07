@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import Razorpay from "razorpay";
 import { PrismaService } from "../../common/prisma.service";
 import { Prisma, OrderType } from "@modern-essentials/db";
@@ -48,9 +53,19 @@ export enum SubscriptionEventType {
 
 const VALID_TRANSITIONS: Record<SubscriptionStatus, SubscriptionStatus[]> = {
   [SubscriptionStatus.PENDING]: [SubscriptionStatus.ACTIVE],
-  [SubscriptionStatus.ACTIVE]: [SubscriptionStatus.RENEWAL_DUE, SubscriptionStatus.PAUSED, SubscriptionStatus.CANCELLED],
-  [SubscriptionStatus.RENEWAL_DUE]: [SubscriptionStatus.ACTIVE, SubscriptionStatus.DUNNING],
-  [SubscriptionStatus.DUNNING]: [SubscriptionStatus.ACTIVE, SubscriptionStatus.CANCELLED],
+  [SubscriptionStatus.ACTIVE]: [
+    SubscriptionStatus.RENEWAL_DUE,
+    SubscriptionStatus.PAUSED,
+    SubscriptionStatus.CANCELLED,
+  ],
+  [SubscriptionStatus.RENEWAL_DUE]: [
+    SubscriptionStatus.ACTIVE,
+    SubscriptionStatus.DUNNING,
+  ],
+  [SubscriptionStatus.DUNNING]: [
+    SubscriptionStatus.ACTIVE,
+    SubscriptionStatus.CANCELLED,
+  ],
   [SubscriptionStatus.PAUSED]: [SubscriptionStatus.ACTIVE],
   [SubscriptionStatus.CANCELLED]: [SubscriptionStatus.PENDING], // Allow reactivation
   [SubscriptionStatus.EXPIRED]: [],
@@ -86,21 +101,33 @@ export class SubscriptionService {
     }
 
     if (!variant.subPrice) {
-      throw new BadRequestException("This product is not available for subscription");
+      throw new BadRequestException(
+        "This product is not available for subscription",
+      );
     }
 
-    const frequency = (createDto.frequency || SubscriptionFrequency.WEEKLY) as SubscriptionFrequency;
+    const frequency = (createDto.frequency ||
+      SubscriptionFrequency.WEEKLY) as SubscriptionFrequency;
     const amount = variant.subPrice * createDto.quantity;
 
     try {
       // 1. Find or create Razorpay Plan
-      const razorpayPlanId = await this.getOrCreateRazorpayPlan(variant.id, amount, frequency);
+      const razorpayPlanId = await this.getOrCreateRazorpayPlan(
+        variant.id,
+        amount,
+        frequency,
+      );
 
       // 2. Create Subscription in Razorpay
       const razorpaySubscription = await this.razorpay.subscriptions.create({
         plan_id: razorpayPlanId,
         customer_notify: 1,
-        total_count: frequency === SubscriptionFrequency.WEEKLY ? 52 : frequency === SubscriptionFrequency.FORTNIGHTLY ? 26 : 12,
+        total_count:
+          frequency === SubscriptionFrequency.WEEKLY
+            ? 52
+            : frequency === SubscriptionFrequency.FORTNIGHTLY
+              ? 26
+              : 12,
         notes: {
           userId,
           variantId: variant.id,
@@ -113,10 +140,12 @@ export class SubscriptionService {
         data: {
           userId,
           variantId: variant.id,
-          planId: await this.prisma.subscriptionPlan.findFirst({
-            where: { razorpayPlanId },
-            select: { id: true },
-          }).then((p) => p?.id),
+          planId: await this.prisma.subscriptionPlan
+            .findFirst({
+              where: { razorpayPlanId },
+              select: { id: true },
+            })
+            .then((p) => p?.id),
           quantity: createDto.quantity,
           frequency: frequency as any,
           status: SubscriptionStatus.PENDING as any,
@@ -143,11 +172,16 @@ export class SubscriptionService {
       const response = this.mapSubscriptionToResponse(subscription, variant);
       response.razorpaySubscriptionId = razorpaySubscription.id;
       response.shortUrl = razorpaySubscription.short_url;
-      
+
       return response;
     } catch (error: any) {
-      this.logger.error(`Failed to create subscription: ${error.message}`, error.stack);
-      throw new BadRequestException(`Failed to create subscription: ${error.message}`);
+      this.logger.error(
+        `Failed to create subscription: ${error.message}`,
+        error.stack,
+      );
+      throw new BadRequestException(
+        `Failed to create subscription: ${error.message}`,
+      );
     }
   }
 
@@ -158,7 +192,9 @@ export class SubscriptionService {
       orderBy: { createdAt: "desc" },
     });
 
-    return subscriptions.map((sub) => this.mapSubscriptionToResponse(sub, sub.variant));
+    return subscriptions.map((sub) =>
+      this.mapSubscriptionToResponse(sub, sub.variant),
+    );
   }
 
   async getSubscriptionById(userId: string, id: string) {
@@ -203,7 +239,9 @@ export class SubscriptionService {
     const currentStatus = sub.status as unknown as SubscriptionStatus;
 
     if (currentStatus === newStatus) {
-      this.logger.log(`Subscription ${subscriptionId} already in status ${newStatus}. Skipping.`);
+      this.logger.log(
+        `Subscription ${subscriptionId} already in status ${newStatus}. Skipping.`,
+      );
       return sub;
     }
 
@@ -214,7 +252,9 @@ export class SubscriptionService {
       );
     }
 
-    this.logger.log(`Transitioning sub ${subscriptionId} from ${currentStatus} to ${newStatus}`);
+    this.logger.log(
+      `Transitioning sub ${subscriptionId} from ${currentStatus} to ${newStatus}`,
+    );
 
     const updateData: any = { status: newStatus as any };
 
@@ -223,18 +263,24 @@ export class SubscriptionService {
       case SubscriptionStatus.ACTIVE:
         if (currentStatus === SubscriptionStatus.PENDING) {
           // Transition 1: PENDING -> ACTIVE (on subscription.activated)
-          updateData.nextBillingAt = this.calculateNextBillingDate(sub.frequency as any);
+          updateData.nextBillingAt = this.calculateNextBillingDate(
+            sub.frequency as any,
+          );
           await this.createFirstOrder(sub, tx);
           // Send welcome WhatsApp (placeholder)
         } else if (currentStatus === SubscriptionStatus.RENEWAL_DUE) {
           // Transition 3: RENEWAL_DUE -> ACTIVE (on subscription.charged)
-          updateData.nextBillingAt = this.calculateNextBillingDate(sub.frequency as any);
+          updateData.nextBillingAt = this.calculateNextBillingDate(
+            sub.frequency as any,
+          );
           updateData.dunningAttempt = 0;
           updateData.dunningStartedAt = null;
           await this.createRenewalOrder(sub, tx);
         } else if (currentStatus === SubscriptionStatus.DUNNING) {
           // Transition 5: DUNNING -> ACTIVE (retry success)
-          updateData.nextBillingAt = this.calculateNextBillingDate(sub.frequency as any);
+          updateData.nextBillingAt = this.calculateNextBillingDate(
+            sub.frequency as any,
+          );
           updateData.dunningAttempt = 0;
           updateData.dunningStartedAt = null;
           await this.createRenewalOrder(sub, tx);
@@ -244,15 +290,21 @@ export class SubscriptionService {
           // Synchronize with Razorpay
           try {
             if (sub.razorpaySubscriptionId) {
-              await this.razorpay.subscriptions.resume(sub.razorpaySubscriptionId);
-              this.logger.log(`Resumed Razorpay subscription ${sub.razorpaySubscriptionId}`);
+              await this.razorpay.subscriptions.resume(
+                sub.razorpaySubscriptionId,
+              );
+              this.logger.log(
+                `Resumed Razorpay subscription ${sub.razorpaySubscriptionId}`,
+              );
             }
           } catch (e: any) {
             this.logger.warn(`Razorpay resume failed: ${e.message}`);
           }
         } else if (currentStatus === SubscriptionStatus.CANCELLED) {
           // Reactivation: CANCELLED -> ACTIVE (handled via reactivate method usually)
-          updateData.nextBillingAt = this.calculateNextBillingDate(sub.frequency as any);
+          updateData.nextBillingAt = this.calculateNextBillingDate(
+            sub.frequency as any,
+          );
           updateData.dunningAttempt = 0;
           updateData.dunningStartedAt = null;
           updateData.cancelledAt = null;
@@ -286,14 +338,16 @@ export class SubscriptionService {
         try {
           await this.razorpay.subscriptions.cancel(sub.razorpaySubscriptionId!);
         } catch (e: any) {
-          this.logger.warn(`Razorpay cancel failed (might already be cancelled): ${e.message}`);
+          this.logger.warn(
+            `Razorpay cancel failed (might already be cancelled): ${e.message}`,
+          );
         }
         // If from dunning, send final cancellation email
         if (currentStatus === SubscriptionStatus.DUNNING) {
           await this.notificationsService.sendSubscriptionCancelled(
             sub.user.email!,
             sub.user.phone, // Passing phone in case it's used as name placeholder
-            `${process.env.STOREFRONT_URL}/reactivate?subId=${sub.id}`
+            `${process.env.STOREFRONT_URL}/reactivate?subId=${sub.id}`,
           );
         }
         break;
@@ -307,7 +361,9 @@ export class SubscriptionService {
         try {
           if (sub.razorpaySubscriptionId) {
             await this.razorpay.subscriptions.pause(sub.razorpaySubscriptionId);
-            this.logger.log(`Paused Razorpay subscription ${sub.razorpaySubscriptionId}`);
+            this.logger.log(
+              `Paused Razorpay subscription ${sub.razorpaySubscriptionId}`,
+            );
           }
         } catch (e: any) {
           this.logger.warn(`Razorpay pause failed: ${e.message}`);
@@ -323,7 +379,9 @@ export class SubscriptionService {
     });
 
     if (updateResult.count === 0) {
-      throw new BadRequestException(`Subscription status changed concurrently. Expected ${currentStatus}.`);
+      throw new BadRequestException(
+        `Subscription status changed concurrently. Expected ${currentStatus}.`,
+      );
     }
 
     const updatedSub = await tx.subscription.findUnique({
@@ -344,33 +402,33 @@ export class SubscriptionService {
 
   private async initiateDunning(subId: string) {
     this.logger.log(`Initiating dunning for subscription ${subId}`);
-    
+
     // Day 1 Retry
     await this.dunningQueue.add(
       "retry",
       { subscriptionId: subId, attempt: 1 },
-      { delay: 1 * 24 * 60 * 60 * 1000 } // +1d
+      { delay: 1 * 24 * 60 * 60 * 1000 }, // +1d
     );
 
     // Day 3 Retry
     await this.dunningQueue.add(
       "retry",
       { subscriptionId: subId, attempt: 2 },
-      { delay: 3 * 24 * 60 * 60 * 1000 } // +3d
+      { delay: 3 * 24 * 60 * 60 * 1000 }, // +3d
     );
 
     // Day 7 Retry
     await this.dunningQueue.add(
       "retry",
       { subscriptionId: subId, attempt: 3 },
-      { delay: 7 * 24 * 60 * 60 * 1000 } // +7d
+      { delay: 7 * 24 * 60 * 60 * 1000 }, // +7d
     );
 
     // Day 8 Auto-Cancel
     await this.dunningQueue.add(
       "auto-cancel",
       { subscriptionId: subId },
-      { delay: 8 * 24 * 60 * 60 * 1000 } // +8d
+      { delay: 8 * 24 * 60 * 60 * 1000 }, // +8d
     );
   }
 
@@ -381,7 +439,9 @@ export class SubscriptionService {
     });
 
     if (!sub || sub.status !== SubscriptionStatus.DUNNING) {
-      this.logger.log(`Skipping dunning attempt ${attempt} for sub ${subId} as it's no longer in DUNNING status.`);
+      this.logger.log(
+        `Skipping dunning attempt ${attempt} for sub ${subId} as it's no longer in DUNNING status.`,
+      );
       return;
     }
 
@@ -392,32 +452,34 @@ export class SubscriptionService {
     // if we were handling payments ourselves. With Razorpay subscriptions, it retries automatically.
     // However, the spec says "Trigger Razorpay retry".
     try {
-      // In Razorpay, there isn't a direct "retry charge" for a subscription, 
+      // In Razorpay, there isn't a direct "retry charge" for a subscription,
       // but we can check if it's already in a state that will retry.
       // If we want to force it, we might need to use the "Charge" API if we have a mandate.
       // For simplicity, let's assume Razorpay handles it and we just send notifications.
       // Or we can "update" the subscription to nudge it.
     } catch (e: any) {
-      this.logger.error(`Failed to nudge Razorpay for sub ${subId}: ${e.message}`);
+      this.logger.error(
+        `Failed to nudge Razorpay for sub ${subId}: ${e.message}`,
+      );
     }
 
     // 2. Send escalation notification
     const updatePaymentUrl = `${process.env.STOREFRONT_URL}/account/subscriptions/${sub.id}`;
-    
+
     switch (attempt) {
       case 1:
         await this.notificationsService.sendDunningRetry1(
           sub.user.email!,
           sub.user.phone,
           sub.user.phone, // name placeholder
-          updatePaymentUrl
+          updatePaymentUrl,
         );
         break;
       case 2:
         await this.notificationsService.sendDunningRetry2(
           sub.user.phone,
           sub.user.phone, // name placeholder
-          updatePaymentUrl
+          updatePaymentUrl,
         );
         break;
       case 3:
@@ -425,7 +487,7 @@ export class SubscriptionService {
           sub.user.email!,
           sub.user.phone,
           sub.user.phone, // name placeholder
-          updatePaymentUrl
+          updatePaymentUrl,
         );
         break;
     }
@@ -437,8 +499,12 @@ export class SubscriptionService {
     });
 
     if (sub && sub.status === SubscriptionStatus.DUNNING) {
-      this.logger.log(`Auto-cancelling sub ${subId} after failed dunning sequence.`);
-      await this.transitionStatus(subId, SubscriptionStatus.CANCELLED, { reason: "Dunning exhausted" });
+      this.logger.log(
+        `Auto-cancelling sub ${subId} after failed dunning sequence.`,
+      );
+      await this.transitionStatus(subId, SubscriptionStatus.CANCELLED, {
+        reason: "Dunning exhausted",
+      });
     }
   }
 
@@ -450,7 +516,9 @@ export class SubscriptionService {
 
     if (!sub) throw new NotFoundException("Subscription not found");
     if (sub.status !== SubscriptionStatus.CANCELLED) {
-      throw new BadRequestException("Only cancelled subscriptions can be reactivated");
+      throw new BadRequestException(
+        "Only cancelled subscriptions can be reactivated",
+      );
     }
 
     this.logger.log(`Reactivating subscription ${subId} for user ${userId}`);
@@ -459,12 +527,21 @@ export class SubscriptionService {
     const variant = sub.variant;
     const amount = variant.subPrice * sub.quantity;
     const frequency = sub.frequency as unknown as SubscriptionFrequency;
-    const razorpayPlanId = await this.getOrCreateRazorpayPlan(variant.id, amount, frequency);
+    const razorpayPlanId = await this.getOrCreateRazorpayPlan(
+      variant.id,
+      amount,
+      frequency,
+    );
 
     const razorpaySubscription = await this.razorpay.subscriptions.create({
       plan_id: razorpayPlanId,
       customer_notify: 1,
-      total_count: frequency === SubscriptionFrequency.WEEKLY ? 52 : frequency === SubscriptionFrequency.FORTNIGHTLY ? 26 : 12,
+      total_count:
+        frequency === SubscriptionFrequency.WEEKLY
+          ? 52
+          : frequency === SubscriptionFrequency.FORTNIGHTLY
+            ? 26
+            : 12,
       notes: {
         userId,
         variantId: variant.id,
@@ -477,7 +554,7 @@ export class SubscriptionService {
     // but the spec says "reactivate" which could mean updating the old one.
     // However, Razorpay subscription IDs are immutable for a record.
     // Let's create a new one.
-    
+
     const newSubscription = await this.prisma.subscription.create({
       data: {
         userId,
@@ -501,7 +578,10 @@ export class SubscriptionService {
         subscriptionId: newSubscription.id,
         eventType: SubscriptionEventType.CREATED as any,
         description: `Reactivated from cancelled subscription ${sub.id}`,
-        metadata: { razorpaySubscriptionId: razorpaySubscription.id, previousSubId: sub.id },
+        metadata: {
+          razorpaySubscriptionId: razorpaySubscription.id,
+          previousSubId: sub.id,
+        },
       },
     });
 
@@ -541,7 +621,8 @@ export class SubscriptionService {
       where: { id: sub.variantId },
     });
 
-    if (!variant) throw new Error("Product variant not found for renewal order");
+    if (!variant)
+      throw new Error("Product variant not found for renewal order");
 
     return prisma.order.create({
       data: {
@@ -567,7 +648,11 @@ export class SubscriptionService {
     });
   }
 
-  private async getOrCreateRazorpayPlan(variantId: string, amount: number, frequency: SubscriptionFrequency) {
+  private async getOrCreateRazorpayPlan(
+    variantId: string,
+    amount: number,
+    frequency: SubscriptionFrequency,
+  ) {
     const existingPlan = await this.prisma.subscriptionPlan.findUnique({
       where: {
         variantId_frequency_amount_durationMonths: {
@@ -583,20 +668,21 @@ export class SubscriptionService {
       return existingPlan.razorpayPlanId;
     }
 
-    const variant = await this.prisma.productVariant.findUnique({ 
+    const variant = await this.prisma.productVariant.findUnique({
       where: { id: variantId },
-      include: { product: true }
+      include: { product: true },
     });
     const planName = `${variant?.product.name || "Product"} (${variant?.sku}) - ${frequency} Subscription`;
 
     const razorpayPlan = await this.razorpay.plans.create({
-      period: frequency === SubscriptionFrequency.MONTHLY ? "monthly" : "weekly",
+      period:
+        frequency === SubscriptionFrequency.MONTHLY ? "monthly" : "weekly",
       interval: frequency === SubscriptionFrequency.FORTNIGHTLY ? 2 : 1,
       item: {
         name: planName,
         amount: amount,
         currency: "INR",
-        description: `Modern Essentials ${frequency} Subscription for ${variant?.product.name} (${variant?.sku})`,
+        description: `The Honest Essentials ${frequency} Subscription for ${variant?.product.name} (${variant?.sku})`,
       },
     });
 
@@ -630,18 +716,29 @@ export class SubscriptionService {
     return nextBilling;
   }
 
-  private mapStatusToEventType(status: SubscriptionStatus): SubscriptionEventType {
+  private mapStatusToEventType(
+    status: SubscriptionStatus,
+  ): SubscriptionEventType {
     switch (status) {
-      case SubscriptionStatus.ACTIVE: return SubscriptionEventType.ACTIVATED;
-      case SubscriptionStatus.PAUSED: return SubscriptionEventType.PAUSED;
-      case SubscriptionStatus.CANCELLED: return SubscriptionEventType.CANCELLED;
-      case SubscriptionStatus.EXPIRED: return SubscriptionEventType.EXPIRED;
-      case SubscriptionStatus.DUNNING: return SubscriptionEventType.PAYMENT_FAILED;
-      default: return SubscriptionEventType.UPDATED;
+      case SubscriptionStatus.ACTIVE:
+        return SubscriptionEventType.ACTIVATED;
+      case SubscriptionStatus.PAUSED:
+        return SubscriptionEventType.PAUSED;
+      case SubscriptionStatus.CANCELLED:
+        return SubscriptionEventType.CANCELLED;
+      case SubscriptionStatus.EXPIRED:
+        return SubscriptionEventType.EXPIRED;
+      case SubscriptionStatus.DUNNING:
+        return SubscriptionEventType.PAYMENT_FAILED;
+      default:
+        return SubscriptionEventType.UPDATED;
     }
   }
 
-  private mapSubscriptionToResponse(subscription: any, variant: any): SubscriptionResponseDto {
+  private mapSubscriptionToResponse(
+    subscription: any,
+    variant: any,
+  ): SubscriptionResponseDto {
     return {
       id: subscription.id,
       variantId: subscription.variantId,
@@ -652,7 +749,9 @@ export class SubscriptionService {
       nextBillingAt: subscription.nextBillingAt,
       nextDeliveryAt: subscription.nextDeliveryAt,
       price: variant.subPrice * subscription.quantity,
-      savings: Math.round(((variant.price - variant.subPrice) / variant.price) * 100),
+      savings: Math.round(
+        ((variant.price - variant.subPrice) / variant.price) * 100,
+      ),
       razorpaySubscriptionId: subscription.razorpaySubscriptionId,
       addressLine1: subscription.addressLine1,
       addressLine2: subscription.addressLine2,
@@ -694,7 +793,11 @@ export class SubscriptionService {
     });
   }
 
-  async pauseSubscription(subId: string, userId: string, pauseDto: PauseSubscriptionDto) {
+  async pauseSubscription(
+    subId: string,
+    userId: string,
+    pauseDto: PauseSubscriptionDto,
+  ) {
     const sub = await this.prisma.subscription.findFirst({
       where: { id: subId, userId },
     });
@@ -738,7 +841,13 @@ export class SubscriptionService {
 
     await this.transitionStatus(subId, SubscriptionStatus.ACTIVE);
 
-    await this.logChange(subId, "RESUME", sub.status, SubscriptionStatus.ACTIVE, userId);
+    await this.logChange(
+      subId,
+      "RESUME",
+      sub.status,
+      SubscriptionStatus.ACTIVE,
+      userId,
+    );
 
     return this.getSubscriptionById(userId, subId);
   }
@@ -750,7 +859,9 @@ export class SubscriptionService {
 
     if (!sub) throw new NotFoundException("Subscription not found");
     if (sub.status !== (SubscriptionStatus.ACTIVE as any)) {
-      throw new BadRequestException("Only active subscriptions can skip delivery");
+      throw new BadRequestException(
+        "Only active subscriptions can skip delivery",
+      );
     }
 
     const oldDate = sub.nextDeliveryAt;
@@ -761,18 +872,20 @@ export class SubscriptionService {
       if (sub.razorpaySubscriptionId) {
         // Razorpay pause requires pause_at. If we want to skip "now", we pause immediately.
         await this.razorpay.subscriptions.pause(sub.razorpaySubscriptionId, {
-          pause_at: "now"
+          pause_at: "now",
         });
-        
+
         // Then we immediately resume it but with a resume_at date
         // Note: Razorpay resume_at might not be available in all SDK versions or plans
         // A simpler way: just pause it locally and let our background job resume it?
         // No, let's try to do it properly in Razorpay if possible.
         // Actually, many companies just handle the skip locally by not generating an order
-        // and letting the payment happen, then adding credit. 
+        // and letting the payment happen, then adding credit.
         // But for "Honest Marketing", we shouldn't charge if they skip.
-        
-        this.logger.log(`Skipped delivery for Razorpay sub ${sub.razorpaySubscriptionId}. Note: Full date sync for skip depends on webhook reconciliation.`);
+
+        this.logger.log(
+          `Skipped delivery for Razorpay sub ${sub.razorpaySubscriptionId}. Note: Full date sync for skip depends on webhook reconciliation.`,
+        );
       }
     } catch (e: any) {
       this.logger.warn(`Razorpay skip sync limited: ${e.message}`);
@@ -797,7 +910,11 @@ export class SubscriptionService {
     return this.getSubscriptionById(userId, subId);
   }
 
-  async changeFrequency(subId: string, userId: string, freqDto: ChangeFrequencyDto) {
+  async changeFrequency(
+    subId: string,
+    userId: string,
+    freqDto: ChangeFrequencyDto,
+  ) {
     const sub = await this.prisma.subscription.findFirst({
       where: { id: subId, userId },
       include: { variant: true },
@@ -809,7 +926,11 @@ export class SubscriptionService {
     const newFreq = freqDto.frequency as SubscriptionFrequency;
     const newAmount = sub.variant.subPrice * sub.quantity;
 
-    const newPlanId = await this.getOrCreateRazorpayPlan(sub.variantId, newAmount, newFreq);
+    const newPlanId = await this.getOrCreateRazorpayPlan(
+      sub.variantId,
+      newAmount,
+      newFreq,
+    );
 
     // Sync with Razorpay
     try {
@@ -817,11 +938,15 @@ export class SubscriptionService {
         await this.razorpay.subscriptions.update(sub.razorpaySubscriptionId, {
           plan_id: newPlanId,
         });
-        this.logger.log(`Updated Razorpay subscription ${sub.razorpaySubscriptionId} with new plan ${newPlanId} (Frequency: ${newFreq})`);
+        this.logger.log(
+          `Updated Razorpay subscription ${sub.razorpaySubscriptionId} with new plan ${newPlanId} (Frequency: ${newFreq})`,
+        );
       }
     } catch (e: any) {
       this.logger.error(`Failed to update Razorpay frequency: ${e.message}`);
-      throw new BadRequestException(`Failed to synchronize frequency with payment provider: ${e.message}`);
+      throw new BadRequestException(
+        `Failed to synchronize frequency with payment provider: ${e.message}`,
+      );
     }
 
     await this.prisma.subscription.update({
@@ -832,12 +957,22 @@ export class SubscriptionService {
       },
     });
 
-    await this.logChange(subId, "CHANGE_FREQUENCY", oldFreq as string, newFreq, userId);
+    await this.logChange(
+      subId,
+      "CHANGE_FREQUENCY",
+      oldFreq as string,
+      newFreq,
+      userId,
+    );
 
     return this.getSubscriptionById(userId, subId);
   }
 
-  async changeQuantity(subId: string, userId: string, qtyDto: ChangeQuantityDto) {
+  async changeQuantity(
+    subId: string,
+    userId: string,
+    qtyDto: ChangeQuantityDto,
+  ) {
     const sub = await this.prisma.subscription.findFirst({
       where: { id: subId, userId },
       include: { variant: true },
@@ -849,7 +984,11 @@ export class SubscriptionService {
     const newQty = qtyDto.quantity;
     const newAmount = sub.variant.subPrice * newQty;
 
-    const newPlanId = await this.getOrCreateRazorpayPlan(sub.variantId, newAmount, sub.frequency as any);
+    const newPlanId = await this.getOrCreateRazorpayPlan(
+      sub.variantId,
+      newAmount,
+      sub.frequency as any,
+    );
 
     // Sync with Razorpay
     try {
@@ -857,11 +996,15 @@ export class SubscriptionService {
         await this.razorpay.subscriptions.update(sub.razorpaySubscriptionId, {
           plan_id: newPlanId,
         });
-        this.logger.log(`Updated Razorpay subscription ${sub.razorpaySubscriptionId} with new plan ${newPlanId} (Quantity: ${newQty})`);
+        this.logger.log(
+          `Updated Razorpay subscription ${sub.razorpaySubscriptionId} with new plan ${newPlanId} (Quantity: ${newQty})`,
+        );
       }
     } catch (e: any) {
       this.logger.error(`Failed to update Razorpay quantity: ${e.message}`);
-      throw new BadRequestException(`Failed to synchronize quantity with payment provider: ${e.message}`);
+      throw new BadRequestException(
+        `Failed to synchronize quantity with payment provider: ${e.message}`,
+      );
     }
 
     await this.prisma.subscription.update({
@@ -880,7 +1023,11 @@ export class SubscriptionService {
     return this.getSubscriptionById(userId, subId);
   }
 
-  async changeAddress(subId: string, userId: string, addrDto: ChangeAddressDto) {
+  async changeAddress(
+    subId: string,
+    userId: string,
+    addrDto: ChangeAddressDto,
+  ) {
     const sub = await this.prisma.subscription.findFirst({
       where: { id: subId, userId },
     });
@@ -898,7 +1045,13 @@ export class SubscriptionService {
       },
     });
 
-    await this.logChange(subId, "CHANGE_ADDRESS", null, addrDto.postalCode, userId);
+    await this.logChange(
+      subId,
+      "CHANGE_ADDRESS",
+      null,
+      addrDto.postalCode,
+      userId,
+    );
 
     return this.getSubscriptionById(userId, subId);
   }
@@ -916,13 +1069,18 @@ export class SubscriptionService {
       include: { product: true },
     });
 
-    if (!newVariant) throw new NotFoundException("New product variant not found");
+    if (!newVariant)
+      throw new NotFoundException("New product variant not found");
 
     const oldVariantId = sub.variantId;
     const newVariantId = swapDto.newVariantId;
     const newAmount = newVariant.subPrice * sub.quantity;
 
-    const newPlanId = await this.getOrCreateRazorpayPlan(newVariantId, newAmount, sub.frequency as any);
+    const newPlanId = await this.getOrCreateRazorpayPlan(
+      newVariantId,
+      newAmount,
+      sub.frequency as any,
+    );
 
     // Sync with Razorpay
     try {
@@ -930,11 +1088,15 @@ export class SubscriptionService {
         await this.razorpay.subscriptions.update(sub.razorpaySubscriptionId, {
           plan_id: newPlanId,
         });
-        this.logger.log(`Updated Razorpay subscription ${sub.razorpaySubscriptionId} with new plan ${newPlanId} (Variant Swapped to: ${newVariant.sku})`);
+        this.logger.log(
+          `Updated Razorpay subscription ${sub.razorpaySubscriptionId} with new plan ${newPlanId} (Variant Swapped to: ${newVariant.sku})`,
+        );
       }
     } catch (e: any) {
       this.logger.error(`Failed to swap product in Razorpay: ${e.message}`);
-      throw new BadRequestException(`Failed to synchronize product swap with payment provider: ${e.message}`);
+      throw new BadRequestException(
+        `Failed to synchronize product swap with payment provider: ${e.message}`,
+      );
     }
 
     await this.prisma.subscription.update({
@@ -942,12 +1104,22 @@ export class SubscriptionService {
       data: { variantId: newVariantId },
     });
 
-    await this.logChange(subId, "SWAP_PRODUCT", oldVariantId, newVariantId, userId);
+    await this.logChange(
+      subId,
+      "SWAP_PRODUCT",
+      oldVariantId,
+      newVariantId,
+      userId,
+    );
 
     return this.getSubscriptionById(userId, subId);
   }
 
-  async cancelSubscription(subId: string, userId: string, cancelDto: CancelSubscriptionDto) {
+  async cancelSubscription(
+    subId: string,
+    userId: string,
+    cancelDto: CancelSubscriptionDto,
+  ) {
     const sub = await this.prisma.subscription.findFirst({
       where: { id: subId, userId },
     });
@@ -974,7 +1146,12 @@ export class SubscriptionService {
     return this.getSubscriptionById(userId, subId);
   }
 
-  async findAllSubscriptions(page = 1, limit = 10, status?: string, userId?: string) {
+  async findAllSubscriptions(
+    page = 1,
+    limit = 10,
+    status?: string,
+    userId?: string,
+  ) {
     const where: any = {};
     if (status) where.status = status;
     if (userId) where.userId = userId;
@@ -1005,7 +1182,11 @@ export class SubscriptionService {
     };
   }
 
-  async adminOverride(subId: string, overrideDto: AdminOverrideDto, adminId: string) {
+  async adminOverride(
+    subId: string,
+    overrideDto: AdminOverrideDto,
+    adminId: string,
+  ) {
     const sub = await this.prisma.subscription.findUnique({
       where: { id: subId },
     });
@@ -1025,7 +1206,9 @@ export class SubscriptionService {
         await this.transitionStatus(subId, SubscriptionStatus.ACTIVE);
         break;
       case "CANCEL":
-        await this.transitionStatus(subId, SubscriptionStatus.CANCELLED, { reason });
+        await this.transitionStatus(subId, SubscriptionStatus.CANCELLED, {
+          reason,
+        });
         break;
       case "MODIFY_QTY":
         if (data.quantity) {
@@ -1041,7 +1224,9 @@ export class SubscriptionService {
             where: { id: subId },
             data: {
               frequency: data.frequency as any,
-              nextBillingAt: this.calculateNextBillingDate(data.frequency as any),
+              nextBillingAt: this.calculateNextBillingDate(
+                data.frequency as any,
+              ),
             },
           });
         }
@@ -1049,7 +1234,7 @@ export class SubscriptionService {
       case "EXTEND":
         // Extend next billing date
         if (data.pauseUntil) {
-           await this.prisma.subscription.update({
+          await this.prisma.subscription.update({
             where: { id: subId },
             data: { nextBillingAt: new Date(data.pauseUntil) },
           });
@@ -1057,7 +1242,14 @@ export class SubscriptionService {
         break;
     }
 
-    await this.logChange(subId, `ADMIN_OVERRIDE_${action}`, null, null, `admin:${adminId}`, reason);
+    await this.logChange(
+      subId,
+      `ADMIN_OVERRIDE_${action}`,
+      null,
+      null,
+      `admin:${adminId}`,
+      reason,
+    );
 
     return this.prisma.subscription.findUnique({
       where: { id: subId },
@@ -1075,7 +1267,9 @@ export class SubscriptionService {
       },
     });
 
-    this.logger.log(`Found ${dueSubscriptions.length} subscriptions due for renewal.`);
+    this.logger.log(
+      `Found ${dueSubscriptions.length} subscriptions due for renewal.`,
+    );
 
     let processedCount = 0;
     for (const sub of dueSubscriptions) {
@@ -1083,14 +1277,16 @@ export class SubscriptionService {
         await this.transitionStatus(sub.id, SubscriptionStatus.RENEWAL_DUE);
         processedCount++;
       } catch (error: any) {
-        this.logger.error(`Failed to process renewal for sub ${sub.id}: ${error.message}`);
+        this.logger.error(
+          `Failed to process renewal for sub ${sub.id}: ${error.message}`,
+        );
       }
     }
 
-    return { 
-      processed: processedCount, 
+    return {
+      processed: processedCount,
       totalChecked: dueSubscriptions.length,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 }

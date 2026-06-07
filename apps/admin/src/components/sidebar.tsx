@@ -84,7 +84,7 @@ export function Sidebar() {
           </div>
           {!collapsed && (
             <span className="text-xl font-headline font-bold tracking-tight text-[#ffffff]">
-              Modern Ops
+              The Honest Essentials Ops
             </span>
           )}
         </div>

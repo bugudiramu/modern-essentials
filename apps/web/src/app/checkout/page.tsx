@@ -152,7 +152,7 @@ function CheckoutContent() {
 
       const options: any = {
         key: checkoutData.key,
-        name: "Modern Essentials",
+        name: "The Honest Essentials",
         description: "Fresh delivery directly to your door",
         prefill: {
           name: `${values.firstName} ${values.lastName}`,

@@ -20,8 +20,8 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Modern Essentials Admin",
-  description: "Ops Dashboard — Modern Essentials",
+  title: "The Honest Essentials Admin",
+  description: "Ops Dashboard — The Honest Essentials",
 };
 
 export default function RootLayout({

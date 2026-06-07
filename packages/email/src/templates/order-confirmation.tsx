@@ -1,5 +1,13 @@
-import * as React from 'react';
-import { Html, Button, Head, Preview, Body, Container, Text } from '@react-email/components';
+import * as React from "react";
+import {
+  Html,
+  Button,
+  Head,
+  Preview,
+  Body,
+  Container,
+  Text,
+} from "@react-email/components";
 
 interface OrderConfirmationEmailProps {
   orderId: string;
@@ -17,8 +25,8 @@ export const OrderConfirmationEmail: React.FC<OrderConfirmationEmailProps> = ({
   return (
     <Html>
       <Head />
-      <Preview>Your Modern Essentials order has been confirmed!</Preview>
-      <Body style={{ fontFamily: 'system-ui, sans-serif' }}>
+      <Preview>Your The Honest Essentials order has been confirmed!</Preview>
+      <Body style={{ fontFamily: "system-ui, sans-serif" }}>
         <Container>
           <Text>Hi {customerName},</Text>
           <Text>Thank you for your order! Here are your order details:</Text>

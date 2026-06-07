@@ -1,4 +1,4 @@
-**MODERN ESSENTIALS**
+**The Honest Essentials**
 
 Company Blueprint & Technical Reference
 
@@ -827,7 +827,7 @@ Record every major architectural or business decision here. This prevents re-lit
 
 Update it when decisions change. Add to the decision log on every major call.
 
-Version 2.0 - March 2026 - Modern Essentials
+Version 2.0 - March 2026 - The Honest Essentials
 
 ### Missing pieces
 
