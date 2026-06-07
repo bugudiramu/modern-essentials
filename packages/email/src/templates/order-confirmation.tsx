@@ -38,7 +38,7 @@ export const OrderConfirmationEmail: React.FC<OrderConfirmationEmailProps> = ({
             </Text>
           ))}
           <Text>Total: {total}</Text>
-          <Button href={`https://modernessentials.in/orders/${orderId}`}>
+          <Button href={`https://thehonestessentials.com/orders/${orderId}`}>
             View Order
           </Button>
         </Container>

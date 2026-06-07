@@ -253,7 +253,9 @@ export class OrdersService {
                 where: { id: batch[0].id },
                 data: { qty: { increment: item.qty } },
               });
-              this.logger.log(`Restocked ${item.qty} units of ${item.variantId} to batch ${batch[0].id}`);
+              this.logger.log(
+                `Restocked ${item.qty} units of ${item.variantId} to batch ${batch[0].id}`,
+              );
             } else {
               // Fallback: If no valid batch found, log as wastage or alert
               await tx.wastageLog.create({
@@ -283,7 +285,9 @@ export class OrdersService {
                 notes: `Order ${orderId} cancelled from status ${currentStatus}. Perishable restock trap triggered.`,
               },
             });
-            this.logger.log(`Logged wastage for ${item.qty} units of ${item.variantId} due to cancellation from ${currentStatus}`);
+            this.logger.log(
+              `Logged wastage for ${item.qty} units of ${item.variantId} due to cancellation from ${currentStatus}`,
+            );
           }
         }
       }
@@ -323,7 +327,8 @@ export class OrdersService {
             {
               id: updatedOrder.id,
               userName: updatedOrder.user.email.split("@")[0],
-              trackingUrl: "https://modernessentials.in/track/" + updatedOrder.id,
+              trackingUrl:
+                "https://thehonestessentials.com/track/" + updatedOrder.id,
             },
           );
         } else if (newStatus === "DELIVERED" && updatedOrder.user.email) {

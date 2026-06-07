@@ -132,7 +132,7 @@ export default function TermsPage() {
                 Compliance Officer at:
               </Text>
               <Text className="text-secondary font-bold">
-                legal@modernessentials.com
+                legal@thehonestessentials.com
               </Text>
             </div>
           </section>

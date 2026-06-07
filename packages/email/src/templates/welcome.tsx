@@ -33,7 +33,7 @@ export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({ name }) => {
             Starting with farm-fresh eggs, we're redefining what it means to eat
             honestly.
           </Text>
-          <Button href="https://modernessentials.in/products">
+          <Button href="https://thehonestessentials.com/products">
             Start Shopping
           </Button>
           <Text>If you have any questions, just reply to this email!</Text>

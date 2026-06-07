@@ -110,7 +110,7 @@ export default function PrivacyPage() {
                 For any data-related queries, reach out to:
               </Text>
               <Text className="text-secondary font-bold">
-                privacy@modernessentials.com
+                privacy@thehonestessentials.com
               </Text>
             </div>
           </section>

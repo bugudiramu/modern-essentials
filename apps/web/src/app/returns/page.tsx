@@ -105,7 +105,7 @@ export default function ReturnsPage() {
                 For any issues with your delivery, contact our support team:
               </Text>
               <Text className="text-secondary font-bold">
-                support@modernessentials.com
+                support@thehonestessentials.com
               </Text>
             </div>
           </section>

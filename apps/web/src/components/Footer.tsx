@@ -19,7 +19,7 @@ export default function Footer() {
             >
               Radical transparency. Fresh delivery. Zero compromises. Starting
               with the humble egg, we are redefining daily essentials for the
-              modern home.
+              the honest essentials home.
             </Text>
           </div>
 
